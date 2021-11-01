@@ -10,11 +10,13 @@ export default defineComponent({
 
 
     let ApiName = 'stock' // def API
-
-    Axios.get('http://192.168.120.180:28090/serverApi/rantion-oms/v2/api-docs').then((res: any) => {
-    //   Axios.get('http://192.168.120.179:9079/v2/api-docs').then((res: any) => {
-
-
+    let setPathsTagsData: ObjectMap
+    let setDefinitionsData: ObjectMap
+    let testDefinitionsData: ObjectMap = {}
+    let compileDefsData: ObjectMap = {}
+    let compileAPIData: ObjectMap = {}
+    // Axios.get('http://192.168.120.180:28090/serverApi/rantion-oms/v2/api-docs').then((res: any) => {
+    Axios.get('http://192.168.120.179:9079/v2/api-docs').then((res: any) => {
       let list = ['data', 'key', 'properties', 'parameters']
       function deleteListData(item:any) {
         list.forEach(l => {
@@ -22,20 +24,29 @@ export default defineComponent({
         })
       }
 
-      // const setPathsTagsData = setPathsTags(res.data.paths, res.data.tags)
-      const setDefinitionsData = setDefinitions(res.data.definitions)
-      // for(let i in setPathsTagsData.setPaths ) {
-      //   setPathsTagsData.setPaths[i].forEach((res: any) => {
-      //     deleteListData(res)
-      //     deleteListData(res.responsesData)
-      //   })
-      // }
+      setPathsTagsData = setPathsTags(res.data.paths, res.data.tags)
+      setDefinitionsData = setDefinitions(res.data.definitions)
+
+      for (let i in setDefinitionsData) {
+        const key = i.replace(regExp.removeTO, '')
+        testDefinitionsData[key] = true
+      }
+
+      for(let i in setPathsTagsData.setPaths ) {
+        setPathsTagsData.setPaths[i].forEach((res: any) => {
+          deleteListData(res)
+          deleteListData(res.responsesData)
+        })
+      }
       for(let i in setDefinitionsData ) {
         deleteListData(setDefinitionsData[i])
       }
+      compileDefsData =  compileDefs(setDefinitionsData)
+      compileAPIData =  compileAPI(setPathsTagsData)
       // console.log('setPathsTagsData', setPathsTagsData);
-      // console.log('setPathsTagsData', setDefinitionsData);
-      compileDefs(setDefinitionsData)
+      // console.log('setDefinitionsData', setDefinitionsData);
+      console.log('compileDefsData', compileDefsData);
+      console.log('compileAPIData', compileAPIData);
     })
 
     const dataTypeList = ['integer', 'string', 'number', 'boolean']
@@ -45,7 +56,8 @@ export default defineComponent({
       ListW: /«\w*»/g,  // 处理T0  «List«StockSkuCo»» List格式的
       sS: /\s\S/g,
       Using: /Using(POST|GET|PUT)\S*/g,
-      Controller: / Controller$/g
+      Controller: / Controller$/g,
+      removeTO: /<(\s|\S|\W\w)*>/g
     }
 
     const replaceData = {
@@ -55,22 +67,34 @@ export default defineComponent({
 
     const replaceMethod = {
       // 将空格转换为大写
-      convertSpacesToUppercase: ((item: string) => {
+      convertSpacesToUppercase: (item: string) => {
         return item.replace(regExp.sS, function($1) {
           return $1.replace(' ', '').toUpperCase()
         })
-      }),
+      },
       //将首字母改为小写
-      changeInitialsToLowercase:((item: string) => {
+      changeInitialsToLowercase:(item: string) => {
         return item.replace(/^\S/g, function($1) {
           return $1.toLowerCase()
         })
-      })
+      },
     }
 
 
-    // const dasda = 'As Material Reject Bill Facade Impl'
-    // console.log('dasda', replaceMethod.convertSpacesToUppercase(dasda))
+
+    const responsesMapping: ObjectMap = {
+      List: 'Array',
+      Map: 'ObjectMap',
+      object: 'ObjectMap',
+      string: 'string',
+      int: 'number',
+      any: 'any',
+    }
+
+    // const  dataasda = '«List«WmsInterceptResultsDto»»'
+    // console.log(dataasda.replace(/\w*/g, function($1,$2, $3) {
+    //   return $1
+    // }))
     //
     // const dastastsa  = 'ResponseDto«List«StockSkuCo»»'
     // console.log(dastastsa.includes('List'))
@@ -84,9 +108,11 @@ export default defineComponent({
     // console.log('name.match(regExp.typeT0)', dastas);
 
     let errData={}
-    function errorMethod(item?:any) {
-      console.error('errData' , item, errData);
+    function errorMethod(item?:any,...arg:any[]) {
+      console.error('errData', errData, item, ...arg);
     }
+
+
     function setDefinitions(item: any) {
       function setName(name: string, item: any) {
         let data = ''
@@ -99,7 +125,6 @@ export default defineComponent({
         return data
       }
       function setPropertiesType(properties: any, item: any, key: string  ) {
-
         let type = ''
         let originalRef = ''
         switch (properties.type) {
@@ -142,8 +167,7 @@ export default defineComponent({
                 //通过报错判断过滤条件
                 const showErrorMethod = !properties.items.originalRef
                 if(showErrorMethod) {
-                  console.log('setPropertiesType  array regExpMatch', { properties, item, key});
-                  errorMethod()
+                  errorMethod('setPropertiesType  array regExpMatch', { properties, item, key})
                 }
               }
               type = `Array<${properties.items.originalRef}>`
@@ -152,14 +176,12 @@ export default defineComponent({
             } else if(properties.items){
               const l:any = setPropertiesType(properties.items, item, key) || 'any'
               if(l.originalRef){
-                  console.log('setPropertiesType  Array setPropertiesType', { properties, item, key});
-                  errorMethod()
+                errorMethod('setPropertiesType  Array setPropertiesType', { properties, item, key})
               }
               type = `Array<${l.type}>`
               break
             } else {
-              console.log('setPropertiesType  array 空', { properties, item, key});
-              errorMethod()
+              errorMethod('setPropertiesType  array 空', { properties, item, key})
               type = '[]'
               break
             }
@@ -180,14 +202,17 @@ export default defineComponent({
             } else {
               const showErrorMethod = properties.type !== "object"
               if(showErrorMethod) {
-                console.log('setPropertiesType  default', { properties, item, key});
-                errorMethod()
+                errorMethod('setPropertiesType  default', { properties, item, key})
               }
               type = 'any'
               break
             }
         }
-        return  {type: type, originalRef: originalRef}
+        let filterObj = JSON.parse(JSON.stringify(properties))
+        delete filterObj.type
+        delete filterObj.originalRef
+        // enum: properties.enum // 选择类型
+        return  {type: type, originalRef: originalRef, ...filterObj }
       }
       let name = ''
       let exportClass = ''
@@ -236,10 +261,15 @@ export default defineComponent({
       return exportClassData
     }
 
+
+
+
+
     // 设置path taps
     function setPathsTags(pathData: any, tagData: any) {
       function setPaths(pathData: any) {
-        function ParametersCommonTypes(item: any) {
+        //parameters基础类型判断
+        function parametersCommonTypes(item: any ) {
           switch (item.type) {
             case 'integer':
               return  'number'
@@ -253,47 +283,49 @@ export default defineComponent({
               let type = 'any'
               if(item.items && item.items.type) {
                 if(!dataTypeList.includes(item.items.type)) {
-                  console.log('setPaths requestParameters  no type to array', item);
-                  errorMethod()
+                  errorMethod('setPaths requestParameters  no type to array', item )
                 }
                 type = item.items.type
               } else {
                 if(item.items) {
-                  console.log('setPaths requestParameters array', item);
-                  errorMethod()
+                  errorMethod('setPaths requestParameters array', item, )
                 }
               }
               return `Array<${type}>`
             default:
-              console.log('setPaths requestParameters default', item);
-              errorMethod()
+              errorMethod( 'setPaths requestParameters default', item)
               return  ''
           }
         }
+
         function setNamespace(item:any) {
           return item.operationId.replace(regExp.Using, '')
         }
         function setParametersType(item:any) {
           let parametersType = ''
-          let originalRef = ''
+          let originalRef = item.originalRef
+          let description = item.description
           switch (item.in) {
             case 'query':
-              parametersType = ParametersCommonTypes(item)
+              parametersType = parametersCommonTypes(item)
               break
             case 'body':
               if(item.schema.originalRef) {
                 parametersType = item.schema.originalRef
                 originalRef = item.schema.originalRef
               } else if(item.schema) {
-                parametersType = ParametersCommonTypes(item.schema)
+                parametersType = parametersCommonTypes(item.schema)
               } else {
-                console.log('body parametersType', item);
-                errorMethod()
+                errorMethod('body parametersType', item)
               }
               break
-
+            case 'path':
+              parametersType = parametersCommonTypes(item)
+              break
+            default:
+              errorMethod('setParametersType in 不是body和query和path', item.in)
           }
-          return { type: parametersType, originalRef: originalRef }
+          return { type: parametersType, originalRef: originalRef, description }
         }
         function setParameters(item:any) {
           let list = ['debug', 'payload']
@@ -303,9 +335,13 @@ export default defineComponent({
           item.forEach((res:any) => {
             if(list.includes(res.name)) return
             parametersType =  setParametersType(res)
+            const filterObj = JSON.parse(JSON.stringify(res))
+            delete filterObj.parametersType
+            delete filterObj.required
             data = {
               parametersType:parametersType,
               required:res.required,
+              ...filterObj
             }
             if(!obj[res.in]) {
               obj[res.in] = {}
@@ -347,6 +383,7 @@ export default defineComponent({
           const setData = {
             data:pathData[i], //只用于参考数据，可以屏蔽
             parameters:pathData[i][requestMethod].parameters, //只用于参考数据，可以屏蔽
+            summary: pathData[i][requestMethod].summary, // 备注名称
             namespace: namespace,
             requestMethod:requestMethod,
             requestParameters:requestParameters,
@@ -380,27 +417,29 @@ export default defineComponent({
     }
 
 
-
+    //编辑Defs
     function compileDefs(definitionsData: ObjectMap) {
       function setParameter(item: any) {
         let data = {description: item.description, type: item.setPropertiesTypeData.type}
+        if(item.setPropertiesTypeData.enum) { //类型的选择项
+          if(data.type  === 'string') {
+            data.type = item.setPropertiesTypeData.enum.join(' | ')
+          } else {
+            errorMethod('setParameter enum type类型不等string', item)
+          }
+        }
         if(item.setPropertiesTypeData.originalRef) {
           if(definitionsData[item.setPropertiesTypeData.originalRef]) {
             data.type = data.type.replace(item.setPropertiesTypeData.originalRef, `defs.${ApiName}.${item.setPropertiesTypeData.originalRef}`)
           }else {
-            errorMethod('setParameter item.setPropertiesTypeData 没有匹配')
+            errorMethod('setParameter item.setPropertiesTypeData 没有匹配', item)
           }
         }
         return data
       }
-
-      console.log('definitionsData', definitionsData);
       let targetTypeData:ObjectMap = {}
       let targetTypeDescriptionData:ObjectMap = {}
-      let nub = 0
       for(let i in definitionsData) {
-        // if(nub > 0) break
-        // nub++
         targetTypeData[i] = {}
         targetTypeDescriptionData[i] = {}
         for (let j in definitionsData[i].setData) {
@@ -418,12 +457,176 @@ export default defineComponent({
           }
         }
       }
-      console.log('targetTypeData', targetTypeData);
-      console.log('targetTypeDescriptionData', targetTypeDescriptionData);
+      return {targetTypeData, targetTypeDescriptionData}
     }
 
 
+    // 编辑API
+    function compileAPI({setPaths, setTagData}: ObjectMap) {
+      // 处理参数，一般在 设置path taps 哪里已经处理了， 一般不会返回 Array类型的
+      function compileApiParametersCommonTypes(item: any, error?: string ) {
+        switch (item.type) {
+          case 'integer':
+            return  'number'
+          case 'number':
+            return  'number'
+          case 'string':
+            return  'string'
+          case 'boolean':
+            return  'boolean'
+          case 'array':
+            errorMethod( 'compileApiParametersCommonTypes array 有值', item, error)
+            let type = 'any'
+            if(item.items && item.items.type) {
+              if(!dataTypeList.includes(item.items.type)) {
+                errorMethod('compileApiParametersCommonTypes no type to array', item, error )
+              }
+              type = item.items.type
+            } else {
+              if(item.items) {
+                errorMethod('compileApiParametersCommonTypes array', item, error)
+              }
+            }
+            return `Array<${type}>`
+          default:
+            const showErrorMethod = item.originalRef
+            if(showErrorMethod) {
+              errorMethod( 'compileApiParametersCommonTypes default', item, error)
+            }
+            return  item.type
+        }
+      }
 
+      function compileApiSetParametersType(item: ObjectMap) {
+        if(item.originalRef) {
+          if(testDefinitionsData[item.originalRef]) {
+            if(item.originalRef === item.type ) {
+              return `def.${ApiName}.${item.type}`
+            } else {
+              errorMethod('compileAPI setParamsBody body originalRef和type不一致')
+            }
+          } else {
+            errorMethod('compileAPI setParamsBody body originalRef 和接口返回值没有匹配',item )
+          }
+        } else {
+          return compileApiParametersCommonTypes(item, 'compileAPI ParametersCommonTypes')
+        }
+      }
+
+      function setParamsBody(item: ObjectMap) {
+        let returnData:ObjectMap = {}
+        const keyList = Object.keys(item)
+        const key = keyList[0]
+        if(keyList.length >1)  errorMethod('compileAPI setParamsBody body有两个值及以上')
+        if(!keyList.length)  errorMethod('compileAPI setParamsBody body没有值')
+        const parametersType = item[key].parametersType
+        returnData[`body${item[key].required? '' : '?'}`] = compileApiSetParametersType(parametersType)
+        return returnData
+      }
+      function setParamsQuery(item: ObjectMap) {
+        let returnData: ObjectMap = {}
+        for (let i in item) {
+          returnData[`${i}${item[i].required? '' : '?'}`]  = {type:compileApiSetParametersType(item[i].parametersType), description: item[i].parametersType.description }
+        }
+        return returnData
+      }
+      function setParamsPath(item: ObjectMap) {
+        let returnData: ObjectMap = {}
+        const keyList = Object.keys(item)
+        if(keyList.length > 1) errorMethod('compileAPI setRequestParameters path 有两个值', item)
+        const key = keyList[0]
+        returnData[`${key}${item[key].required? '' : '?'}`]  = {type:compileApiSetParametersType(item[key].parametersType), description: item[key].parametersType.description }
+        return returnData
+      }
+      function setRequestParameters(params: ObjectMap) {
+        const returnData: ObjectMap = {}
+        for (let i in params) {
+          switch (i) {
+            case 'body':
+              returnData.body = setParamsBody(params[i])
+              break
+            case 'query':
+              returnData.query = setParamsQuery(params[i])
+              break
+            case 'path':
+              returnData.path = setParamsPath(params[i])
+              break
+            default:
+              errorMethod('compileAPI setRequestParameters 不是body和query和path', params)
+          }
+        }
+        if(!Object.keys(returnData).length) {
+          // console.log('returnData', params);
+          // errorMethod()
+        }
+        return returnData
+      }
+
+      function setResponsesData(params: ObjectMap) {
+        function testResponsesData(item: string, call: () => void) {
+          if(responsesMapping[item]) {
+            return responsesMapping[item]
+          } else if(testDefinitionsData[item]) {
+            return `def.${ApiName}.${item}`
+          } else {
+            console.error('testResponsesData', item);
+            call()
+          }
+          return  item
+        }
+        const replaceData =  params.originalRef.replace(regExp.typeT0, "")
+        const matchData = params.originalRef.match(regExp.typeT0)
+        let returnData = ''
+        let returnMatchData = ''
+        let error = ''
+        if(matchData) {
+          if(matchData.length === 1) {
+            returnMatchData =  matchData[0].replace(/\w*/g, function($1:any) {
+              if($1) {
+                return testResponsesData($1,() => { error = 'compileAPI setResponsesData matchData 数据错误 '})
+              }
+              return $1
+            })
+            returnMatchData = returnMatchData.replace(regExp.replaceT0, function($1) {
+              if($1 === '«') {
+                return '<'
+              } else if($1 === '»') {
+                return '>'
+              }
+              return $1
+            })
+            if(error) {
+              errorMethod(error, params)
+            }
+          } else {
+            errorMethod('compileAPI setResponsesData matchData数据大于2', params)
+          }
+        }
+        if(!replaceData) {
+          errorMethod('compileAPI setResponsesData replaceData 为空', params)
+        } else {
+          returnData = testResponsesData(replaceData,() => { errorMethod('compileAPI setResponsesData replaceData 数据错误', params)})
+        }
+        return `${returnData}${returnMatchData}`
+      }
+      let returnData:ObjectMap  = {}
+      for (let i in setPaths ) {
+        returnData[i] = {}
+        setPaths[i].forEach((item: any, index:number) => {
+          errData = {data: setPaths[i], key: i, type: 'compileAPI——setPaths',item: item}
+          const ApiParameters = setRequestParameters(item.requestParameters)
+          const ApiResponsesData = setResponsesData(item.responsesData)
+          returnData[i][item.namespace] = {...item, requestParameters: ApiParameters, responsesData: ApiResponsesData}
+        })
+      }
+
+      let TagDataReturnData:ObjectMap  = {}
+      for (let i in returnData) {
+        TagDataReturnData[setTagData[i]] = returnData[i]
+      }
+      console.log('TagDataReturnData',TagDataReturnData);
+      return returnData
+    }
 
 
 
