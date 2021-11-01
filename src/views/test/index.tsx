@@ -10,13 +10,14 @@ export default defineComponent({
 
     // initApi({url: 'http://192.168.120.180:28090/serverApi/rantion-oms/v2/api-docs'}).then((res: any) => {
     initApi({url: 'http://192.168.120.177:9007/v2/api-docs'}).then((res: any) => {
-      console.log('res res', res);
+      // console.log('res res', res);
     })
 
 
     return () => (
       <div>
-        <Interface />
+        {/*<Interface />*/}
+        123456
       </div>
     )
   },

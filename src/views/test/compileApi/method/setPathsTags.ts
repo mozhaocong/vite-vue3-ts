@@ -12,93 +12,86 @@ export function setPathsTags(pathData: any, tagData: any) {
 }
 function setPaths(pathData: any) {
   //parameters基础类型判断
-  function parametersCommonTypes(item: any ) {
-    switch (item.type) {
-      case 'integer':
-        return  'number'
-      case 'number':
-        return  'number'
-      case 'string':
-        return  'string'
-      case 'boolean':
-        return  'boolean'
-      case 'array':
-        let type = 'any'
-        if(item.items && item.items.type) {
-          if(!dataTypeList.includes(item.items.type)) {
-            errorMethod('setPaths requestParameters  no type to array', item )
-          }
-          type = item.items.type
-        } else {
-          if(item.items) {
-            errorMethod('setPaths requestParameters array', item, )
-          }
-        }
-        return `Array<${type}>`
-      default:
-        errorMethod( 'setPaths requestParameters default', item)
-        return  ''
-    }
-  }
+  // function parametersCommonTypes(item: any ) {
+  //   switch (item.type) {
+  //     case 'integer':
+  //       return  'number'
+  //     case 'number':
+  //       return  'number'
+  //     case 'string':
+  //       return  'string'
+  //     case 'boolean':
+  //       return  'boolean'
+  //     case 'array':
+  //       let type = 'any'
+  //       if(item.items && item.items.type) {
+  //         if(!dataTypeList.includes(item.items.type)) {
+  //           errorMethod('setPaths requestParameters  no type to array', item )
+  //         }
+  //         type = item.items.type
+  //       } else {
+  //         if(item.items) {
+  //           errorMethod('setPaths requestParameters array', item, )
+  //         }
+  //       }
+  //       return `Array<${type}>`
+  //     default:
+  //       errorMethod( 'setPaths requestParameters default', item)
+  //       return  ''
+  //   }
+  // }
 
   function setNamespace(item:any) {
     return item.operationId.replace(regExp.Using, '')
   }
-  function setParametersType(item:any) {
-    let parametersType = ''
-    let originalRef = item.originalRef
-    let description = item.description
-    switch (item.in) {
-      case 'query':
-        parametersType = parametersCommonTypes(item)
-        break
-      case 'body':
-        if(item.schema.originalRef) {
-          parametersType = item.schema.originalRef
-          originalRef = item.schema.originalRef
-        } else if(item.schema) {
-          if(item.schema.items && item.schema.items.originalRef) {
-            parametersType = item.schema.type
-            originalRef = item.schema.items.originalRef
-          } else {
-            parametersType = parametersCommonTypes(item.schema)
-          }
-        } else {
-          errorMethod('body parametersType', item)
-        }
-        break
-      case 'path':
-        parametersType = parametersCommonTypes(item)
-        break
-      default:
-        errorMethod('setParametersType in 不是body和query和path', item.in)
-    }
-    return { type: parametersType, originalRef: originalRef, description }
-  }
+  // function setParametersType(item:any) {
+  //   let parametersType = ''
+  //   let originalRef = item.originalRef
+  //   let description = item.description
+  //   switch (item.in) {
+  //     case 'query':
+  //       parametersType = parametersCommonTypes(item)
+  //       break
+  //     case 'body':
+  //       if(item.schema.originalRef) {
+  //         parametersType = item.schema.originalRef
+  //         originalRef = item.schema.originalRef
+  //       } else if(item.schema) {
+  //         if(item.schema.items && item.schema.items.originalRef) {
+  //           parametersType = item.schema.type
+  //           originalRef = item.schema.items.originalRef
+  //         } else {
+  //           parametersType = parametersCommonTypes(item.schema)
+  //         }
+  //       } else {
+  //         errorMethod('body parametersType', item)
+  //       }
+  //       break
+  //     case 'path':
+  //       parametersType = parametersCommonTypes(item)
+  //       break
+  //     default:
+  //       errorMethod('setParametersType in 不是body和query和path', item.in)
+  //   }
+  //   return { type: parametersType, originalRef: originalRef, description }
+  // }
   function setParameters(item:any) {
-    let list = ['debug', 'payload']
-    let obj: any = {}
-    let parametersType = {}
-    let data
+    const  noList = ['debug', 'payload']
+    const filterList = ['query', 'body', 'path' ]
+    let returnData: any = {}
     item.forEach((res:any) => {
-      if(list.includes(res.name)) return
-      parametersType =  setParametersType(res)
-      const filterObj = JSON.parse(JSON.stringify(res))
-      delete filterObj.parametersType
-      delete filterObj.required
-      data = {
-        parametersType:parametersType,
-        required:res.required,
-        ...filterObj
-      }
-      if(!obj[res.in]) {
-        obj[res.in] = {}
-        obj[res.in][res.name] = data
+      if(noList.includes(res.name)) return
+      if(filterList.includes(res.in)) {
+        if(!returnData[res.in]) {
+          returnData[res.in] = [res]
+        } else {
+          returnData[res.in].push(res)
+        }
       } else {
-        obj[res.in][res.name] = data
+        errorMethod('setParameters  不是body和query和path', item)
       }
     })
-    return obj
+    return returnData
   }
   function setResponses(item: ObjectMap<number, any>) {
     let responses = {data: item, originalRef: '' }
@@ -108,6 +101,7 @@ function setPaths(pathData: any) {
         if(item[i].schema) {
           responses.originalRef = item[i]?.schema.originalRef
         } else {
+          errorMethod('setResponses 200  schema 没有 originalRef')
           responses.originalRef = 'any'
         }
       }
@@ -130,7 +124,6 @@ function setPaths(pathData: any) {
     responsesData = setResponses(pathData[i][requestMethod].responses)
     const setData = {
       data:pathData[i], //只用于参考数据，可以屏蔽
-      parameters:pathData[i][requestMethod].parameters, //只用于参考数据，可以屏蔽
       summary: pathData[i][requestMethod].summary, // 备注名称
       namespace: namespace,
       requestMethod:requestMethod,

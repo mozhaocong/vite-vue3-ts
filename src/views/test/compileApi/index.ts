@@ -22,17 +22,12 @@ let compileAPIData: ObjectMap = {}
 
 
 import testData from './test.json'
-
-console.log('testData', testData);
-
-
-
-
 export function initApi({url}: any) {
   return  new Promise((resolve) => {
     // Axios.get(url).then((res: any) => {
     let res:any= {}
     res.data = testData
+    console.log('res.data', res.data)
     let list = ['data', 'key', 'properties', 'parameters']
     function deleteListData(item:any) {
       list.forEach(l => {
@@ -57,9 +52,9 @@ export function initApi({url}: any) {
     for(let i in setDefinitionsData ) {
       deleteListData(setDefinitionsData[i])
     }
-    compileDefsData =  compileDefs(setDefinitionsData)
+    // compileDefsData =  compileDefs(setDefinitionsData)
     compileAPIData =  compileAPI(setPathsTagsData)
-    console.log('setPathsTagsData', setPathsTagsData);
+    // console.log('setPathsTagsData', setPathsTagsData);
     // console.log('setDefinitionsData', setDefinitionsData);
     // console.log('compileDefsData', compileDefsData);
     // console.log('compileAPIData', compileAPIData);
@@ -67,20 +62,4 @@ export function initApi({url}: any) {
     resolve({compileAPIData: compileAPIData, compileDefsData,setTagData: setPathsTagsData.setTagData  })
     // })
   })
-  // const  dataasda = '«List«WmsInterceptResultsDto»»'
-  // console.log(dataasda.replace(/\w*/g, function($1,$2, $3) {
-  //   return $1
-  // }))
-  //
-  // const dastastsa  = 'ResponseDto«List«StockSkuCo»»'
-  // console.log(dastastsa.includes('List'))
-  // const datastdasgas: any = dastastsa.match(regExp.typeT0)
-  // let dastas:any=''
-  // if(datastdasgas.length) {
-  //   console.log('datastdasgas', datastdasgas);
-  //   dastas = datastdasgas[0].match(regExp.ArrayW)[0].replace(regExp.replaceT0, '')
-  //
-  // }
-  // console.log('name.match(regExp.typeT0)', dastas);
-
 }
