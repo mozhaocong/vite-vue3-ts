@@ -8,9 +8,6 @@ type ObjectMap<Key extends string | number | symbol = any, Value = any> = {
 
 // 编辑API
 export function compileAPI({setPaths, setTagData}: ObjectMap) {
-
-
-
   let returnData:ObjectMap  = {}
   for (let i in setPaths ) {
     returnData[i] = {}
@@ -21,13 +18,21 @@ export function compileAPI({setPaths, setTagData}: ObjectMap) {
       returnData[i][item.namespace] = {...item, requestParameters: ApiParameters, responsesData: ApiResponsesData}
     })
   }
-
-  let TagDataReturnData:ObjectMap  = {}
-  for (let i in returnData) {
-    TagDataReturnData[setTagData[i]] = returnData[i]
+  for(let  i in returnData) {
+    for(let j in returnData[i]) {
+      const ijData = returnData[i][j]
+      ijData.apiName = `API.${ApiName}.${setTagData[i]}.${j}`
+      ijData.requestParameters = specialTreatment(ijData.requestParameters)
+    }
   }
   return returnData
 }
+
+function specialTreatment(item: ObjectMap) {
+  const data = JSON.stringify(item)
+  return JSON.parse(data.replace(/records\[0\]\./g, ''))
+}
+
 
 function setResponsesData(params: ObjectMap) {
   function testResponsesData(item: string, call: () => void) {
@@ -36,7 +41,6 @@ function setResponsesData(params: ObjectMap) {
     } else if(testDefinitionsData[item]) {
       return `def.${ApiName}.${item}`
     } else {
-      console.error('testResponsesData', item);
       call()
     }
     return  item
@@ -54,8 +58,7 @@ function setResponsesData(params: ObjectMap) {
   let error = ''
   if(matchData) {
     if(matchData.length === 1) {
-      // returnMatchData =  matchData[0].replace(/\w*/g, function($1:any) {
-      returnMatchData =  matchData[0].replace(/[\u4e00-\u9fa5_a-zA-Z0-9]*/g, function($1:any) {
+      returnMatchData =  matchData[0].replace(regExp.ChineseEnglish, function($1:any) {
         if($1) {
           return testResponsesData($1,() => { error = 'compileAPI setResponsesData matchData 数据错误 '})
         }
@@ -84,7 +87,6 @@ function setResponsesData(params: ObjectMap) {
   return `${returnData}${returnMatchData}`
 }
 
-// 处理参数，一般在 设置path taps 哪里已经处理了， 一般不会返回 Array类型的
 function compileApiParametersCommonTypes(item: any, error?: string ) {
   switch (item.type) {
     case 'integer':
@@ -102,6 +104,12 @@ function compileApiParametersCommonTypes(item: any, error?: string ) {
           errorMethod('compileApiParametersCommonTypes no type to array', item, error )
         }
         type = item.items.type
+      } else if(item.items && item.items.$ref && item.items.originalRef) {
+        if(testDefinitionsData[item.items.originalRef]) {
+          return `Array<def.${ApiName}.${item.items.originalRef}>`
+        } else {
+          errorMethod('compileApiParametersCommonTypes originalRef 参数错误 ', item, error )
+        }
       } else {
         if(item.items) {
           errorMethod('compileApiParametersCommonTypes array', item, error)
@@ -120,7 +128,7 @@ function compileApiParametersCommonTypes(item: any, error?: string ) {
 function compileApiSetParametersType(item: ObjectMap) {
   if(item.originalRef) {
     if(testDefinitionsData[item.originalRef]) {
-      return `def.${ApiName}.${item.type}`
+      return `def.${ApiName}.${item.originalRef}`
     } else {
       errorMethod('compileAPI setParamsBody body originalRef 和接口返回值没有匹配',item )
     }
@@ -131,9 +139,10 @@ function compileApiSetParametersType(item: ObjectMap) {
 
 
 
-const bodyList = ['description', 'in', 'name', 'required', 'schema']
-const schemaList = ['$ref', 'originalRef']
-const queryParameterList = ['description', 'format', 'in', 'name', 'required', 'type', 'items', 'collectionFormat']
+const bodyList = ['description', 'in', 'name', 'required', 'schema', 'format']
+const schemaList = ['$ref', 'originalRef', 'type', 'items', 'format']
+const queryParameterList = ['description', 'format', 'in', 'name', 'required', 'type', 'items', 'collectionFormat', 'default']
+const paramsParameterList = ['description', 'in', 'name', 'required', 'type','format']
 
 function inspectListError(res: ObjectMap, list: string[], error: any) {
   for(let i in res) {
@@ -153,12 +162,14 @@ function setParamsBody(item: any[]) {
     } else {
       errorMethod('compileAPI setRequestParameters setParamsBody res.schema为空', item)
     }
-    returnData.key = [`body${res.required? '' : '?'}`]
+    returnData.key = `body${res.required? '' : '?'}`
   })
 
   function setSchema(schema: ObjectMap) {
     if(schema.originalRef) {
       return  compileApiSetParametersType(schema)
+    } else if(schema.type) {
+      return  compileApiParametersCommonTypes(schema, 'setSchema schema.type && schema.items', )
     } else {
       errorMethod('setSchema originalRef为空')
       return 'any'
@@ -175,16 +186,14 @@ function setParamsQuery(item: any[]) {
   })
   return returnData
 }
-function setParamsPath(item: ObjectMap) {
-  let returnData: any = []
-  const keyList = Object.keys(item)
-  // const key = keyList[0]
-  returnData = keyList.map((key) => {
-    return  {type:compileApiSetParametersType(item[key].parametersType), description: item[key].parametersType.description, key: `${key}${item[key].required? '' : '?'}` }
+function setParamsPath(item: any[]) {
+  let returnData: any[] = []
+  item.forEach(res => {
+    inspectListError(res, paramsParameterList, ['setParamsPath paramsParameterList找不到对应值', res])
+    returnData.push({ key: `${res.name}${res.required? '' : '?'}`,type:compileApiSetParametersType(res), description: res.description })
   })
   return returnData
 }
-let data = 0
 function setRequestParameters(params: ObjectMap) {
   const returnData: ObjectMap = {}
   for (let i in params) {
@@ -195,15 +204,12 @@ function setRequestParameters(params: ObjectMap) {
       case 'query':
         returnData.query = setParamsQuery(params[i])
         break
-        // case 'path':
-        //   returnData.path = setParamsPath(params[i])
-        //   break
-        // default:
-        //   errorMethod('compileAPI setRequestParameters 不是body和query和path', params)
+      case 'path':
+        returnData.path = setParamsPath(params[i])
+        break
+      default:
+        errorMethod('compileAPI setRequestParameters 不是body和query和path', params)
     }
   }
-  // if(!Object.keys(returnData).length) {
-  //   errorMethod('returnData 数据为空', params)
-  // }
   return returnData
 }

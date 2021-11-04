@@ -101,7 +101,7 @@ function setPaths(pathData: any) {
         if(item[i].schema) {
           responses.originalRef = item[i]?.schema.originalRef
         } else {
-          errorMethod('setResponses 200  schema 没有 originalRef')
+          // errorMethod('setResponses 200  schema 没有 originalRef')
           responses.originalRef = 'any'
         }
       }

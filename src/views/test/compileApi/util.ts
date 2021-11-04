@@ -6,7 +6,8 @@ export const regExp = {
   sS: /\s\S/g,
   Using: /Using(POST|GET|PUT)\S*/g,
   Controller: / Controller$/g,
-  removeTO: /<(\s|\S|\W\w)*>/g
+  removeTO: /<(\s|\S|\W\w)*>/g,
+  ChineseEnglish:/[\u4e00-\u9fa5_a-zA-Z0-9]*/g
 }
 type ObjectMap<Key extends string | number | symbol = any, Value = any> = {
   [key in Key]: Value
