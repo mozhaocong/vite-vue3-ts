@@ -6,7 +6,7 @@ interface PendingType {
 	method?: Method
 	params: any
 	data: any
-	cancel: () => void
+	cancel: (item: string) => void
 }
 
 // 取消重复请求

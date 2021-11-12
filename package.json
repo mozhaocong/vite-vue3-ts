@@ -10,10 +10,11 @@
   "dependencies": {
     "ant-design-vue": "^2.2.6",
     "axios": "^0.22.0",
+    "clipboard": "^2.0.8",
     "sass": "^1.43.4",
     "vue": "^3.2.6",
-    "vue-json-viewer": "3",
-    "vue-router": "^4.0.11"
+    "vue-router": "^4.0.11",
+    "vue3-json-viewer": "^1.0.4"
   },
   "devDependencies": {
     "@typescript-eslint/eslint-plugin": "^4.15.1",

@@ -4,7 +4,6 @@ declare module '*.vue' {
 	const component: DefineComponent<{}, {}, any>
 	export default component
 }
-declare module 'vue-json-viewer' {}
 
 type ObjectMap<Key extends string | number | symbol = any, Value = any> = {
 	[key in Key]: Value
