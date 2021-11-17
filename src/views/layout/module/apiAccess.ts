@@ -1,8 +1,8 @@
 import { initApi } from '@/compileApi'
 
-export async function apiInit(url: string): Promise<{ arrayData: any[]; res: ObjectMap }> {
+export async function apiInit(url: string, apiName: string): Promise<{ arrayData: any[]; res: ObjectMap }> {
 	return new Promise((resolve) => {
-		initApi({ url: '/JSON/test.json', apiName: 'oms' }).then((res: any) => {
+		initApi({ url: url, apiName: apiName }).then((res: any) => {
 			const arrayData: any[] = []
 			for (const i in res.compileAPIData) {
 				const dataA: any = { labelEn: res.setTagData[i], labelCn: i, children: [], value: res.setTagData[i] }

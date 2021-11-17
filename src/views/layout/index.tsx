@@ -1,20 +1,21 @@
 import { defineComponent, ref, computed } from 'vue'
 import { apiInit } from './module/apiAccess'
 import ApiInterface from './module/apiInterface'
-import { compileApiModule } from '@/store/modules/compileApi'
+import { compileApiModule, compileApiListType } from '@/store/modules/compileApi'
 export default defineComponent({
 	name: 'layout',
 	setup() {
-		compileApiModule.get_compileApiList()
+		const apiName = ref('oms')
+		compileApiModule.get_compileApiList(apiName.value)
 		const compileApiList = computed(() => {
 			return compileApiModule.compileApiList
 		})
-		apiInit('/JSON/test.json').then((item) => {
+		apiInit('/JSON/test.json', apiName.value).then((item) => {
 			subMenuList.value = item.arrayData
 			apiData.value = item.res
 		})
-		const selectedKeys2 = ref<string[]>(['1'])
-		const openKeys = ref<string[]>(['sub1'])
+		const selectedKeys = ref<string[]>([])
+		const openKeys = ref<string[]>([])
 		const subMenuList = ref<any[]>([])
 		const labelName = ref('labelCn')
 		const apiInterfaceData = ref<ObjectMap>({})
@@ -25,6 +26,18 @@ export default defineComponent({
 		}
 		function onSearch(item: string) {
 			console.log(item)
+		}
+		function compileApiListCLick(item: compileApiListType) {
+			subMenuList.value.forEach((res) => {
+				res.children &&
+					res.children.forEach((resC: any) => {
+						if (resC.value === item.value) {
+							apiInterfaceData.value = resC
+							selectedKeys.value = [resC.value]
+							openKeys.value = [res.value]
+						}
+					})
+			})
 		}
 
 		return () => (
@@ -39,7 +52,11 @@ export default defineComponent({
 							</a-space>
 							<a-space>
 								{compileApiList.value.map((item) => {
-									return <div style={{ color: 'red' }}>{item.value}</div>
+									return (
+										<a-button type="primary" onClick={() => compileApiListCLick(item)}>
+											{item.value}
+										</a-button>
+									)
 								})}
 							</a-space>
 						</a-space>
@@ -49,7 +66,7 @@ export default defineComponent({
 							<a-menu
 								mode="inline"
 								v-models={[
-									[selectedKeys2.value, 'selectedKeys'],
+									[selectedKeys.value, 'selectedKeys'],
 									[openKeys.value, 'openKeys']
 								]}
 							>
@@ -75,7 +92,7 @@ export default defineComponent({
 							{/*	<a-breadcrumb-item>App</a-breadcrumb-item>*/}
 							{/*</a-breadcrumb>*/}
 							<a-layout-content>
-								<ApiInterface sourceData={apiInterfaceData.value} apiData={apiData.value} />
+								<ApiInterface sourceData={apiInterfaceData.value} apiData={apiData.value} apiName={apiName.value} />
 							</a-layout-content>
 						</a-layout>
 					</a-layout>

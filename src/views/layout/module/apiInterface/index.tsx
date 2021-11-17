@@ -1,4 +1,4 @@
-import { defineComponent, PropType } from 'vue'
+import { defineComponent, PropType, ref } from 'vue'
 import { compileApiModule } from '@/store/modules/compileApi'
 const propsData = {
 	sourceData: {
@@ -14,12 +14,18 @@ const propsData = {
 		default() {
 			return {}
 		}
+	},
+	apiName: {
+		required: true,
+		type: String as PropType<string>,
+		default: ''
 	}
 }
 export default defineComponent({
 	name: 'apiInterface',
 	props: propsData,
 	setup(props) {
+		const drawerVisible = ref(false)
 		function requestParameters(item: ObjectMap) {
 			const arrayList: any[] = []
 			for (const i in item.requestParameters) {
@@ -53,7 +59,7 @@ export default defineComponent({
 		}
 
 		function saveApi() {
-			compileApiModule.set_compileApiList({ value: props.sourceData.value })
+			compileApiModule.set_compileApiList({ item: { value: props.sourceData.value }, apiName: props.apiName })
 		}
 
 		return () => (
@@ -62,6 +68,13 @@ export default defineComponent({
 					<div>接口名称：{props.sourceData.value}</div>
 					<a-button type="primary" onClick={saveApi}>
 						保存
+					</a-button>
+					<a-button
+						onClick={() => {
+							drawerVisible.value = true
+						}}
+					>
+						设置
 					</a-button>
 				</a-space>
 				<a-from labelCol={{ span: 8 }} wrapperCol={{ span: 14 }}>
@@ -83,6 +96,11 @@ export default defineComponent({
 						</a-col>
 					</a-row>
 				</a-from>
+				<a-drawer title="Basic Drawer" placement="right" closable={false} v-model={[drawerVisible.value, 'visible']}>
+					<p>Some contents...</p>
+					<p>Some contents...</p>
+					<p>Some contents...</p>
+				</a-drawer>
 			</>
 		)
 	}
