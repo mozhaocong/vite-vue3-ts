@@ -15,6 +15,11 @@ const routes: Array<RouteRecordRaw> = [
 		path: '/testJSON',
 		name: 'testJSON',
 		component: () => import('../views/testJSON/index')
+	},
+	{
+		path: '/layout',
+		name: 'layout',
+		component: () => import('../views/layout/index')
 	}
 ]
 const router = createRouter({
