@@ -1,4 +1,4 @@
-import { defineComponent, ref, computed } from 'vue'
+import { defineComponent, ref, computed, provide } from 'vue'
 import { apiInit } from './module/apiAccess'
 import ApiInterface from './module/apiInterface'
 import { compileApiModule, compileApiListType } from '@/store/modules/compileApi'
@@ -10,6 +10,7 @@ export default defineComponent({
 		const compileApiList = computed(() => {
 			return compileApiModule.compileApiList
 		})
+		provide('compileApiList', compileApiList.value)
 		apiInit('/JSON/test.json', apiName.value).then((item) => {
 			subMenuList.value = item.arrayData
 			apiData.value = item.res
