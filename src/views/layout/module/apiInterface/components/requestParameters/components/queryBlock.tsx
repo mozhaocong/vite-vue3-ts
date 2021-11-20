@@ -54,6 +54,24 @@ export default defineComponent({
 			)
 		})
 
+		const paramsMappingValue = ref<string>('')
+		const paramsMappingList = ref<any[]>([])
+		function paramsMappingCLick() {
+			const data: any[] = paramsMappingValue.value.split('，') || []
+			paramsMappingList.value = data
+		}
+		function paramsMappingBlock() {
+			return (
+				<>
+					<a-textarea v-model={[paramsMappingValue.value, 'value']} />
+					<a-button onClick={paramsMappingCLick}>确定</a-button>
+					{paramsMappingList.value.map((item) => {
+						return <div>1</div>
+					})}
+				</>
+			)
+		}
+
 		const filterOptions = computed(() => {
 			const data = reqData.value
 			return data.map((item) => {
@@ -61,20 +79,22 @@ export default defineComponent({
 			})
 		})
 		const filterModal = ref(false)
+		const isParamsMapping = ref(false)
 
 		return () => (
 			<>
 				<a-space size={15}>
 					<div>参数名称： {props.reqData.value}</div>
 					<a-button onClick={() => (filterModal.value = true)}>过滤字段</a-button>
+					<a-button onClick={() => (isParamsMapping.value = true)}>参数映射</a-button>
+					<a-button onClick={() => (isParamsMapping.value = false)}>参数列表</a-button>
 				</a-space>
 				<a-divider />
 				<a-modal v-model={[filterModal.value, 'visible']} title="过滤字段" width="70vw">
-					<a-checkbox-group v-model={[filterCheckedList.value, 'checkedList']} options={filterOptions.value}>
-						<a-row></a-row>
-					</a-checkbox-group>
+					<a-checkbox-group v-model={[filterCheckedList.value, 'checkedList']} options={filterOptions.value} />
 				</a-modal>
-				{props.reqData.data && props.reqData.data.length && defaultBlock.value}
+				{!isParamsMapping.value && defaultBlock.value}
+				{isParamsMapping.value && paramsMappingBlock()}
 			</>
 		)
 	}
