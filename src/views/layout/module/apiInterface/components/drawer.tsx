@@ -73,7 +73,12 @@ export default defineComponent({
 						borderRadius: '0 0 4px 4px'
 					}}
 				>
-					<a-button onClick={close}>取消</a-button>
+					<a-button type="primary" onClick={determine}>
+						重置
+					</a-button>
+					<a-button type="primary" onClick={close}>
+						取消
+					</a-button>
 					<a-button type="primary" onClick={determine}>
 						确定
 					</a-button>

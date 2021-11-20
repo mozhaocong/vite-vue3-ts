@@ -1,37 +1,45 @@
-import { Action, getModule, Module, Mutation, VuexModule } from 'vuex-module-decorators'
+import { getModule, Module, Mutation, VuexModule } from 'vuex-module-decorators'
 import store from '@/store'
-export interface compileApiListType {
+
+export type compileApiObjectCheckboxList = {
+	namespace: boolean
+	requestParameters: boolean
+	responsesData: boolean
+}
+export interface compileApiObjectType {
 	value: string
+	quickBuild?: boolean
+	checkboxList?: compileApiObjectCheckboxList
 }
 
 export interface compileApiState {
-	compileApiList: Array<compileApiListType>
+	compileApiObject: ObjectMap<string, compileApiObjectType>
 }
+function getLocalStorageCompileApiObject(apiName: string) {
+	const data = window.localStorage.getItem(`${apiName}_compileApiObject`)
+	return data ? JSON.parse(data) : {}
+}
+
 @Module({ namespaced: true, store, name: 'compileApi', dynamic: true })
 export class compileApi extends VuexModule implements compileApiState {
-	public compileApiList: Array<compileApiListType> = []
+	public compileApiObject: ObjectMap<string, compileApiObjectType> = {}
 
 	@Mutation
-	public set_compileApiList({ apiName, item }: { item: compileApiListType; apiName: string }) {
+	public set_compileApiObject({ apiName, item }: { item: compileApiObjectType; apiName: string }) {
 		if (!item || !item.value || !apiName) return
-		let isOk = true
-		for (let i of this.compileApiList) {
-			console.log(i)
-			if (i.value === item.value) {
-				i = item
-				isOk = false
-				break
-			}
+		this.compileApiObject = getLocalStorageCompileApiObject(apiName)
+		if (this.compileApiObject[item.value]) {
+			this.compileApiObject[item.value] = Object.assign(this.compileApiObject[item.value], item)
+		} else {
+			this.compileApiObject[item.value] = { value: item.value }
+			this.compileApiObject[item.value] = item
 		}
-		if (isOk) this.compileApiList.push(item)
-		window.localStorage.setItem(`${apiName}_compileApiList`, JSON.stringify(this.compileApiList))
+		window.localStorage.setItem(`${apiName}_compileApiObject`, JSON.stringify(this.compileApiObject))
 	}
 
 	@Mutation
-	public get_compileApiList(apiName: string) {
-		const data = window.localStorage.getItem(`${apiName}_compileApiList`)
-		this.compileApiList = data ? JSON.parse(data) : []
-		return this.compileApiList
+	public get_compileApiObject(apiName: string) {
+		this.compileApiObject = getLocalStorageCompileApiObject(apiName)
 	}
 }
 export const compileApiModule = getModule(compileApi)

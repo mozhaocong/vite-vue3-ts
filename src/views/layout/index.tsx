@@ -1,16 +1,21 @@
-import { defineComponent, ref, computed, provide } from 'vue'
+import { defineComponent, ref, computed } from 'vue'
 import { apiInit } from './module/apiAccess'
 import ApiInterface from './module/apiInterface'
-import { compileApiModule, compileApiListType } from '@/store/modules/compileApi'
+import { compileApiModule, compileApiObjectType } from '@/store/modules/compileApi'
 export default defineComponent({
 	name: 'layout',
 	setup() {
 		const apiName = ref('oms')
-		compileApiModule.get_compileApiList(apiName.value)
+		compileApiModule.get_compileApiObject(apiName.value)
 		const compileApiList = computed(() => {
-			return compileApiModule.compileApiList
+			const data: Array<compileApiObjectType> = []
+			for (const argumentsKey in compileApiModule.compileApiObject) {
+				if (compileApiModule.compileApiObject[argumentsKey].quickBuild) {
+					data.push(compileApiModule.compileApiObject[argumentsKey])
+				}
+			}
+			return data
 		})
-		provide('compileApiList', compileApiList.value)
 		apiInit('/JSON/test.json', apiName.value).then((item) => {
 			subMenuList.value = item.arrayData
 			apiData.value = item.res
@@ -28,7 +33,7 @@ export default defineComponent({
 		function onSearch(item: string) {
 			console.log(item)
 		}
-		function compileApiListCLick(item: compileApiListType) {
+		function compileApiListCLick(item: compileApiObjectType) {
 			subMenuList.value.forEach((res) => {
 				res.children &&
 					res.children.forEach((resC: any) => {

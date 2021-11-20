@@ -1,17 +1,20 @@
-import { defineComponent, PropType, ref, reactive } from 'vue'
-import { compileApiModule } from '@/store/modules/compileApi'
+import { defineComponent, PropType, ref, watch, provide } from 'vue'
+import { compileApiModule, compileApiObjectCheckboxList } from '@/store/modules/compileApi'
 import ApiInterfaceDrawer from './components/drawer'
+import { clone } from '@/utils/data'
+import { sourceData, apiData } from '@/views/layout/tsType'
+import RequestParameters from './components/requestParameters'
 const propsData = {
 	sourceData: {
 		required: true,
-		type: Object as PropType<ObjectMap>,
+		type: Object as PropType<sourceData>,
 		default() {
 			return {}
 		}
 	},
 	apiData: {
 		required: true,
-		type: Object as PropType<ObjectMap>,
+		type: Object as PropType<apiData>,
 		default() {
 			return {}
 		}
@@ -25,61 +28,77 @@ const propsData = {
 export default defineComponent({
 	name: 'apiInterface',
 	props: propsData,
-	setup(props) {
-		const parameter = ref({
+	setup(props, { attrs }) {
+		const parameter = ref<compileApiObjectCheckboxList>({
 			namespace: true,
 			requestParameters: true,
 			responsesData: true
 		})
 
-		const checkboxList = ref({
+		const checkboxList = ref<compileApiObjectCheckboxList>({
 			namespace: true,
 			requestParameters: true,
 			responsesData: true
 		})
 
 		const drawerVisible = ref(false)
-		function requestParameters(item: ObjectMap) {
-			const arrayList: any[] = []
-			for (const i in item.requestParameters) {
-				switch (i) {
-					case 'query':
-						arrayList.push({ label: 'query', value: item.apiName + '.Params', data: item.requestParameters.query })
-						break
-					case 'body':
-						arrayList.push({
-							label: 'body',
-							value: item.requestParameters.body.type,
-							data: item.requestParameters.query
-						})
-						break
-					case 'path':
-						arrayList.push({
-							label: 'path',
-							value: item.requestParameters.path.map((res: any) => res.key).join(','),
-							data: item.requestParameters.path
-						})
-						break
-				}
+		const apiInterfacePropsData = ref({ ...clone(props) })
+		// provide('apiInterfacePropsDataProvide')
+		watch(
+			() => props.sourceData,
+			(item) => {
+				compileApiObjectInit()
+			},
+			{
+				immediate: true,
+				deep: true
 			}
-			return arrayList.map((res) => {
-				return (
-					<div>
-						{res.label} : {res.value}
-					</div>
-				)
-			})
+		)
+		function compileApiObjectInit() {
+			apiInterfacePropsData.value = { ...clone(props) }
+			initParameter()
+			const data = compileApiModule.compileApiObject[props.sourceData.value]
+			if (!data) {
+				return
+			}
+			if (data.checkboxList) {
+				setParameter(data.checkboxList)
+			}
 		}
 
-		function saveApi() {
-			compileApiModule.set_compileApiList({ item: { value: props.sourceData.value }, apiName: props.apiName })
+		function saveApiQuickBuild() {
+			compileApiModule.set_compileApiObject({
+				item: { value: props.sourceData.value, quickBuild: true },
+				apiName: props.apiName
+			})
 		}
+		function saveApiCheckboxList(item: compileApiObjectCheckboxList) {
+			compileApiModule.set_compileApiObject({
+				item: { value: props.sourceData.value, checkboxList: item },
+				apiName: props.apiName
+			})
+		}
+		function setParameter(item: compileApiObjectCheckboxList) {
+			parameter.value = clone(item)
+			checkboxList.value = clone(item)
+		}
+		function initParameter() {
+			const data = {
+				namespace: true,
+				requestParameters: true,
+				responsesData: true
+			}
+			parameter.value = clone(data)
+			checkboxList.value = clone(data)
+		}
+
+		console.log('12512')
 
 		return () => (
 			<>
 				<a-space size={15}>
 					<div>接口名称：{props.sourceData.value}</div>
-					<a-button type="primary" onClick={saveApi}>
+					<a-button type="primary" onClick={saveApiQuickBuild}>
 						保存
 					</a-button>
 					<a-button
@@ -90,39 +109,34 @@ export default defineComponent({
 						设置
 					</a-button>
 				</a-space>
-				<a-from labelCol={{ span: 8 }} wrapperCol={{ span: 14 }}>
-					<a-row gutter={[16, 16]}>
-						{parameter.value.namespace && (
-							<a-col span={24}>
-								<a-card title="接口类名(namespace)" bordered={true}>
-									<div>{props.sourceData?.apiName}</div>
-								</a-card>
-							</a-col>
-						)}
-						{parameter.value.requestParameters && (
-							<a-col span={24}>
-								<a-card title="接口请求参数(requestParameters)" bordered={true}>
-									<div>{requestParameters(props.sourceData)}</div>
-								</a-card>
-							</a-col>
-						)}
-						{parameter.value.responsesData && (
-							<a-col span={24}>
-								<a-card title="接口返回参数(responsesData)" bordered={true}>
-									<div>{props.sourceData.responsesData}</div>
-								</a-card>
-							</a-col>
-						)}
-					</a-row>
-				</a-from>
+				<a-row gutter={[16, 16]}>
+					{parameter.value.namespace && (
+						<a-col span={24}>
+							<a-card title="接口类名(namespace)" bordered={true}>
+								<div>{props.sourceData?.apiName}</div>
+							</a-card>
+						</a-col>
+					)}
+					{parameter.value.requestParameters && (
+						<RequestParameters apiInterfacePropsData={apiInterfacePropsData.value} />
+					)}
+					{parameter.value.responsesData && (
+						<a-col span={24}>
+							<a-card title="接口返回参数(responsesData)" bordered={true}>
+								<div>{props.sourceData.responsesData}</div>
+							</a-card>
+						</a-col>
+					)}
+				</a-row>
 				<ApiInterfaceDrawer
 					drawerVisible={drawerVisible}
 					checkboxList={checkboxList}
 					onClose={() => {
-						console.log('checkboxList', checkboxList.value)
+						checkboxList.value = clone(parameter.value)
 					}}
 					determine={() => {
-						console.log(checkboxList.value)
+						saveApiCheckboxList(checkboxList.value)
+						compileApiObjectInit()
 					}}
 				/>
 			</>
