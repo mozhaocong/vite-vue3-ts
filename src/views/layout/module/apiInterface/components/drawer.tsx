@@ -18,7 +18,8 @@ const propsData = {
 		}
 	},
 	onClose: Function as PropType<() => void>,
-	determine: Function as PropType<() => void>
+	determine: Function as PropType<() => void>,
+	resetClick: Function as PropType<() => void>
 }
 export default defineComponent({
 	name: 'apiInterfaceDrawer',
@@ -27,6 +28,12 @@ export default defineComponent({
 		function determine() {
 			if (props.determine) {
 				props.determine()
+			}
+			close()
+		}
+		function resetClick() {
+			if (props.resetClick) {
+				props.resetClick()
 			}
 			close()
 		}
@@ -73,7 +80,7 @@ export default defineComponent({
 						borderRadius: '0 0 4px 4px'
 					}}
 				>
-					<a-button type="primary" onClick={determine}>
+					<a-button type="primary" onClick={resetClick}>
 						重置
 					</a-button>
 					<a-button type="primary" onClick={close}>

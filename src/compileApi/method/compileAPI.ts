@@ -174,7 +174,8 @@ function setParamsBody(item: any[]) {
 		} else {
 			errorMethod('compileAPI setRequestParameters setParamsBody res.schema为空', item)
 		}
-		returnData.key = `body${res.required ? '' : '?'}`
+		returnData.key = `body`
+		returnData.required = res.required
 	})
 
 	function setSchema(schema: ObjectMap) {
@@ -195,7 +196,8 @@ function setParamsQuery(item: any[]) {
 	item.forEach((res) => {
 		inspectListError(res, queryParameterList, ['setParamsQuery queryParameterList找不到对应值', res])
 		returnData.push({
-			key: `${res.name}${res.required ? '' : '?'}`,
+			key: `${res.name}`,
+			required: res.required,
 			type: compileApiSetParametersType(res),
 			description: res.description
 		})
@@ -207,7 +209,8 @@ function setParamsPath(item: any[]) {
 	item.forEach((res) => {
 		inspectListError(res, paramsParameterList, ['setParamsPath paramsParameterList找不到对应值', res])
 		returnData.push({
-			key: `${res.name}${res.required ? '' : '?'}`,
+			key: `${res.name}`,
+			required: res.required,
 			type: compileApiSetParametersType(res),
 			description: res.description
 		})

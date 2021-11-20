@@ -1,66 +1,93 @@
-import { defineComponent, PropType, inject, watch, ref } from 'vue'
+import { defineComponent, PropType, inject, watch, computed } from 'vue'
 import { apiInterfacePropsData } from '@/views/layout/tsType'
+import QueryBlock from './components/queryBlock'
+import PathBlock from './components/pathBlock'
+import BodyBlock from './components/bodyBlock'
 const propsData = {
-	apiInterfacePropsData: {
-		required: true,
-		type: Object as PropType<apiInterfacePropsData>,
-		default() {
-			return {}
-		}
-	}
+	// apiInterfacePropsData: {
+	// 	required: true,
+	// 	type: Object as PropType<apiInterfacePropsData>,
+	// 	default() {
+	// 		return {}
+	// 	}
+	// }
 }
 export default defineComponent({
 	name: 'apiInterface',
-	props: propsData,
+	// props: propsData,
 	setup(props) {
-		// console.log("inject('apiInterfacePropsDataProvide')", inject('apiInterfacePropsDataProvide'))
-		// const data = ref(inject(''))
-		// watch(
-		// 	() => data.value,
-		// 	(item) => {
-		// 		console.log('item', item)
-		// 	},
-		// 	{
-		// 		deep: true,
-		// 		immediate: true
-		// 	}
-		// )
+		const apiInterfacePropsData = computed(() => {
+			const data = inject('apiInterfacePropsData') as () => apiInterfacePropsData
+			return data()
+		})
 
 		function requestParameters(item: ObjectMap) {
-			const arrayList: any[] = []
+			console.log('item', item)
+			const requestParametersObject: ObjectMap = {}
 			for (const i in item.requestParameters) {
 				switch (i) {
 					case 'query':
-						arrayList.push({ label: 'query', value: item.apiName + '.Params', data: item.requestParameters.query })
+						// arrayList.push({ label: 'query', value: item.apiName + '.Params', data: item.requestParameters.query })
+						requestParametersObject.query = {
+							render: () => (
+								<QueryBlock
+									reqData={{ label: 'query', value: item.apiName + '.Params', data: item.requestParameters.query }}
+								/>
+							)
+						}
 						break
 					case 'body':
-						arrayList.push({
-							label: 'body',
-							value: item.requestParameters.body.type,
-							data: item.requestParameters.query
-						})
+						requestParametersObject.body = {
+							render: () => (
+								<BodyBlock
+									reqData={{
+										label: 'body',
+										value: item.requestParameters.body.type,
+										data: item.requestParameters.query
+									}}
+								/>
+							)
+						}
 						break
 					case 'path':
-						arrayList.push({
-							label: 'path',
-							value: item.requestParameters.path.map((res: any) => res.key).join(','),
-							data: item.requestParameters.path
-						})
+						requestParametersObject.path = {
+							render: () => (
+								<PathBlock
+									reqData={{
+										label: 'path',
+										value: item.requestParameters.path.map((res: any) => res.key).join(','),
+										data: item.requestParameters.path
+									}}
+								/>
+							)
+						}
 						break
 				}
 			}
-			return arrayList.map((res) => {
-				return (
-					<div>
-						{res.label} : {res.value}
-					</div>
-				)
-			})
+			return (
+				<a-tabs>
+					{requestParametersObject.query && (
+						<a-tab-pane key="1" tab="query参数">
+							{requestParametersObject.query.render()}
+						</a-tab-pane>
+					)}
+					{requestParametersObject.body && (
+						<a-tab-pane key="1" tab="body参数">
+							{requestParametersObject.body.render()}
+						</a-tab-pane>
+					)}
+					{requestParametersObject.path && (
+						<a-tab-pane key="1" tab="path参数">
+							{requestParametersObject.path.render()}
+						</a-tab-pane>
+					)}
+				</a-tabs>
+			)
 		}
 		return () => (
 			<a-col span={24}>
 				<a-card title="接口请求参数(requestParameters)" bordered={true}>
-					<div>{requestParameters(props.apiInterfacePropsData.sourceData)}</div>
+					<div>{requestParameters(apiInterfacePropsData.value.sourceData)}</div>
 				</a-card>
 			</a-col>
 		)

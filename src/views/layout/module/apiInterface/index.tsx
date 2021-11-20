@@ -43,7 +43,7 @@ export default defineComponent({
 
 		const drawerVisible = ref(false)
 		const apiInterfacePropsData = ref({ ...clone(props) })
-		// provide('apiInterfacePropsDataProvide')
+		provide('apiInterfacePropsData', () => apiInterfacePropsData.value)
 		watch(
 			() => props.sourceData,
 			(item) => {
@@ -90,9 +90,8 @@ export default defineComponent({
 			}
 			parameter.value = clone(data)
 			checkboxList.value = clone(data)
+			return data
 		}
-
-		console.log('12512')
 
 		return () => (
 			<>
@@ -117,9 +116,7 @@ export default defineComponent({
 							</a-card>
 						</a-col>
 					)}
-					{parameter.value.requestParameters && (
-						<RequestParameters apiInterfacePropsData={apiInterfacePropsData.value} />
-					)}
+					{parameter.value.requestParameters && <RequestParameters />}
 					{parameter.value.responsesData && (
 						<a-col span={24}>
 							<a-card title="接口返回参数(responsesData)" bordered={true}>
@@ -136,6 +133,10 @@ export default defineComponent({
 					}}
 					determine={() => {
 						saveApiCheckboxList(checkboxList.value)
+						compileApiObjectInit()
+					}}
+					resetClick={() => {
+						saveApiCheckboxList(initParameter())
 						compileApiObjectInit()
 					}}
 				/>
