@@ -134,7 +134,7 @@ export default defineComponent({
 			if (key === 'edit') {
 				editData = getEditData()
 			}
-			const data: any[] = paramsMappingValue.value.split(/[,|，|]/g) || []
+			const data: any[] = paramsMappingValue.value.split(/[,|，]/g) || []
 			const returnList: reqDataType[] = data.map((item) => {
 				if (key === 'edit') {
 					if (editData[item]) {
