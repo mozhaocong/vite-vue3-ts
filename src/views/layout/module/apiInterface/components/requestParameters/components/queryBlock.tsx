@@ -2,6 +2,7 @@ import { defineComponent, PropType, ref, computed, watch, inject } from 'vue'
 import { ArrayKeyToObjet, clone, setObjetToObject } from '@/utils/data'
 import { apiInterfacePropsData, reqDataType } from '@/views/layout/tsType'
 import { compileApiModule } from '@/store/modules/compileApi'
+import DataProcessing from './dataProcessing'
 
 const propsData = {
 	reqData: {
@@ -213,6 +214,7 @@ export default defineComponent({
 
 		return () => (
 			<>
+				<DataProcessing />
 				<a-space size={15}>
 					<div>参数名称： {props.reqData.value}</div>
 					<a-button onClick={() => (filterModal.value = true)}>过滤字段</a-button>
