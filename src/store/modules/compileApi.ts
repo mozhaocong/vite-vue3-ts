@@ -1,15 +1,21 @@
 import { getModule, Module, Mutation, VuexModule } from 'vuex-module-decorators'
 import store from '@/store'
+import { mergeDeepRight } from 'ramda'
+import { reqDataType } from '@/views/layout/tsType'
 
 export type compileApiObjectCheckboxList = {
 	namespace: boolean
 	requestParameters: boolean
 	responsesData: boolean
 }
+type queryDataType = {
+	mappingList?: Array<reqDataType>
+}
 export interface compileApiObjectType {
 	value: string
 	quickBuild?: boolean
 	checkboxList?: compileApiObjectCheckboxList
+	reqData?: { queryData?: queryDataType }
 }
 
 export interface compileApiState {
@@ -29,7 +35,8 @@ export class compileApi extends VuexModule implements compileApiState {
 		if (!item || !item.value || !apiName) return
 		this.compileApiObject = getLocalStorageCompileApiObject(apiName)
 		if (this.compileApiObject[item.value]) {
-			this.compileApiObject[item.value] = Object.assign(this.compileApiObject[item.value], item)
+			// this.compileApiObject[item.value] = Object.assign(this.compileApiObject[item.value], item)
+			this.compileApiObject[item.value] = <compileApiObjectType>mergeDeepRight(this.compileApiObject[item.value], item)
 		} else {
 			this.compileApiObject[item.value] = { value: item.value }
 			this.compileApiObject[item.value] = item

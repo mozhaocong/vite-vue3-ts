@@ -11,6 +11,7 @@
     "ant-design-vue": "^3.0.0-alpha.11",
     "axios": "^0.22.0",
     "clipboard": "^2.0.8",
+    "ramda": "^0.27.1",
     "sass": "^1.43.4",
     "vue": "^3.2.6",
     "vue-router": "^4.0.11",
@@ -19,6 +20,7 @@
     "vuex-module-decorators": "^1.0.1"
   },
   "devDependencies": {
+    "@types/ramda": "^0.27.50",
     "@typescript-eslint/eslint-plugin": "^4.15.1",
     "@typescript-eslint/parser": "^4.31.0",
     "@vitejs/plugin-vue": "^1.6.0",

@@ -1,5 +1,25 @@
+import { isNil } from 'ramda'
+
 export function clone(data: any) {
 	return JSON.parse(JSON.stringify(data))
+}
+
+export function ArrayKeyToObjet(list: Array<ObjectMap>, key: string): ObjectMap {
+	const data: ObjectMap = {}
+	list.forEach((item) => {
+		if (item[key]) {
+			data[item[key]] = item
+		}
+	})
+	return data
+}
+
+export function setObjetToObject(data: ObjectMap, setData: ObjectMap) {
+	for (const i in data) {
+		if (!isNil(setData[i])) {
+			data[i] = setData[i]
+		}
+	}
 }
 
 // 递归深拷贝

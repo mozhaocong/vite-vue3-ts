@@ -1,20 +1,11 @@
-import { defineComponent, PropType, inject, watch, computed } from 'vue'
+import { defineComponent, inject, computed } from 'vue'
 import { apiInterfacePropsData } from '@/views/layout/tsType'
 import QueryBlock from './components/queryBlock'
 import PathBlock from './components/pathBlock'
 import BodyBlock from './components/bodyBlock'
-const propsData = {
-	// apiInterfacePropsData: {
-	// 	required: true,
-	// 	type: Object as PropType<apiInterfacePropsData>,
-	// 	default() {
-	// 		return {}
-	// 	}
-	// }
-}
+const propsData = {}
 export default defineComponent({
 	name: 'apiInterface',
-	// props: propsData,
 	setup(props) {
 		const apiInterfacePropsData = computed(() => {
 			const data = inject('apiInterfacePropsData') as () => apiInterfacePropsData
@@ -22,7 +13,6 @@ export default defineComponent({
 		})
 
 		function requestParameters(item: ObjectMap) {
-			console.log('item', item)
 			const requestParametersObject: ObjectMap = {}
 			for (const i in item.requestParameters) {
 				switch (i) {
