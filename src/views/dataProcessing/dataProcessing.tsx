@@ -27,6 +27,7 @@ export default defineComponent({
 		const dfhd = /(.*)=>\{{0,1}(\n|.*)+?\}/g
 		const brackets = /{[^{]*?}/g // 判断括号
 		const funCall = /\w+\((\n|.)*?\)/g // 函数调用 cinoFilter('text')
+		const funBrackets = /\([^(]*\)=>{[^{]+?}/g // 括号函数
 		// function sliceData() {
 		// 	const data = dataProcessing.value.split(list)
 		// 	let testData = last(data)
