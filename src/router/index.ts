@@ -20,6 +20,11 @@ const routes: Array<RouteRecordRaw> = [
 		path: '/layout',
 		name: 'layout',
 		component: () => import('../views/layout/index')
+	},
+	{
+		path: '/dataProcessing',
+		name: 'dataProcessing',
+		component: () => import('../views/dataProcessing/dataProcessing')
 	}
 ]
 const router = createRouter({
