@@ -1,5 +1,4 @@
-import { defineComponent, PropType, ref } from 'vue'
-import { last } from 'ramda'
+import { defineComponent, PropType, ref, onMounted } from 'vue'
 const propsData = {
 	sourceData: {
 		required: true,
@@ -14,17 +13,32 @@ export default defineComponent({
 	props: propsData,
 	setup(props) {
 		const dataProcessing = ref<string>('')
+		const dataHead = ref('')
+		const autoHeadCheck = ref(true)
+		const autoHeadData = ref('')
+		function autoHeadChange() {
+			if (autoHeadCheck.value) {
+				dataProcessing.value = dataProcessing.value.replace(headConst, ($1) => {
+					autoHeadData.value = $1
+					return ''
+				})
+			} else {
+				dataProcessing.value = autoHeadData.value + dataProcessing.value
+				autoHeadData.value = ''
+			}
+		}
+		onMounted(() => {
+			autoHeadChange()
+		})
+
 		const testData = localStorage.getItem('testData')
 		if (testData) {
 			dataProcessing.value = testData
 		}
-		const list = /(const | let).*=/
-		const testns = /[\n\s]/g
-		const dat = /(\w+:'\S*?',{0,1})|(\w+:\d+,{0,1})/g
+		const headConst = /^.*(const|let)(.|[^\n])*=/
 		const semicolon = /('.*?')|(".*?")/g
 		const htmlDom = /<[^/](\w|-|_)+\s{0,1}\S+?>/g
 		const htmlDomHead = /<[^/](\w|-|_)+\s{0,1}/g
-		const brackets = /{[^{]*?}/g // 判断括号
 		const funCall = /\w+\((\n|.)*?\)/g // 函数调用 cinoFilter('text')
 		const returnSpace = /return /g
 		const funBrackets = /\([^(]*\)=>{[^{]+?}/g // 括号函数
@@ -94,28 +108,6 @@ export default defineComponent({
 			errorNumber++
 			return errorMark + errorNumber + errorMark
 		}
-
-		// function sliceData() {
-		// 	const data = dataProcessing.value.split(list)
-		// 	let testData = last(data)
-		// 	testData = testData.replace(testns, '')
-		// 	testData = testData.slice(1, testData.length - 1)
-		// 	const listData = testData.split(/},{/g)
-		// 	const mapList = listData.map((item, index) => {
-		// 		if (index === 0) {
-		// 			item += '}'
-		// 		} else if (index === listData.length - 1) {
-		// 			item = '{' + item
-		// 		} else {
-		// 			item = '{' + item + '}'
-		// 		}
-		// 		return item
-		// 	})
-		// 	console.log(mapList)
-		// }
-
-		//转成JSON对象
-		// console.log('dataddmd', eval('(' + agasga + ')'))
 
 		function textClick() {
 			const data = dataProcessing.value
@@ -215,10 +207,9 @@ export default defineComponent({
 					return `'${$1}'`
 				})
 			}
+
 			const returnData = setParsingReplaceData()
-			console.log('returnData', returnData)
 			const evalData = eval('(' + returnData + ')')
-			console.log('evalData', evalData)
 
 			let testData = JSON.stringify(evalData)
 			testData = testData.replace(new RegExp(`"(${getAllMarkReg()})"`, 'g'), ($1) => {
@@ -242,6 +233,11 @@ export default defineComponent({
 		}
 		return () => (
 			<div style={{ width: '80%', margin: 'auto' }}>
+				<a-input v-model={dataHead.value} />
+				<a-checkbox v-model={[autoHeadCheck.value, 'checked']} onChange={autoHeadChange}>
+					头部匹配const | let
+				</a-checkbox>
+				<div>{autoHeadData.value}</div>
 				<a-textarea v-model={[dataProcessing.value, 'value']} autosize={true} />
 				<a-button
 					onClick={() => {
