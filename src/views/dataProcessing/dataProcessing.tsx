@@ -1,4 +1,5 @@
-import { defineComponent, PropType, ref, onMounted } from 'vue'
+import { defineComponent, onMounted, PropType, ref, watch } from 'vue'
+
 const propsData = {
 	sourceData: {
 		required: true,
@@ -12,10 +13,32 @@ export default defineComponent({
 	name: 'dataProcessing',
 	props: propsData,
 	setup(props) {
+		const headConst = /^.*(const|let)(.|[^\n])*=/
+		const semicolon = /('.*?')|(".*?")/g
+		const htmlDom = /<[^/](\w|-|_)+\s{0,1}\S+?>/g
+		const htmlDomHead = /<[^/](\w|-|_)+\s{0,1}/g
+		const funCall = /\w+ *\((\n|.)*?\)/g // 函数调用 cinoFilter('text')
+		const returnSpace = /return /g
+		const buildFunction = /(\.\.\.)(.|\s)*?(,|]|})/g // 构建函数  ...xxx
+		const funBrackets = /\([^(]*\) *=> *{[^{]+?}/g // 括号函数
+		const brackets = /{[^{]*?}/g // 判断括号
+		//处理特殊符号例如 （转\(
+		function setSpecialSymbolReg(value: string) {
+			return value.replace(/\(|\)/g, ($1) => {
+				return `\\${$1}`
+			})
+		}
+
 		const dataProcessing = ref<string>('')
 		const dataHead = ref('')
 		const autoHeadCheck = ref(true)
 		const autoHeadData = ref('')
+		watch(
+			() => dataProcessing.value,
+			() => {
+				autoHeadChange()
+			}
+		)
 		function autoHeadChange() {
 			if (autoHeadCheck.value) {
 				dataProcessing.value = dataProcessing.value.replace(headConst, ($1) => {
@@ -35,27 +58,13 @@ export default defineComponent({
 		if (testData) {
 			dataProcessing.value = testData
 		}
-		const headConst = /^.*(const|let)(.|[^\n])*=/
-		const semicolon = /('.*?')|(".*?")/g
-		const htmlDom = /<[^/](\w|-|_)+\s{0,1}\S+?>/g
-		const htmlDomHead = /<[^/](\w|-|_)+\s{0,1}/g
-		const funCall = /\w+\((\n|.)*?\)/g // 函数调用 cinoFilter('text')
-		const returnSpace = /return /g
-		const funBrackets = /\([^(]*\)=>{[^{]+?}/g // 括号函数
 
-		//处理特殊符号例如 （转\(
-		function setSpecialSymbolReg(value: string) {
-			return value.replace(/\(|\)/g, ($1) => {
-				return `\\${$1}`
-			})
-		}
-
-		// 过滤 xxx:semicolonMark标签的 和 数字 和 { 和 ture 和 false
-		// \w+:(?!((('.*?')|(".*?"))|\d|{)).+
+		// 过滤 xxx:semicolonMark标签的 和 数字 和 { 和 [ 和 ture 和 false
+		// \w+:(?!((('.*?')|(".*?"))|\d|{|\[|ture|false)).+
 		function setKeyReplaceMark() {
 			const semicolonMarkRe = getMark(semicolonMark)
 			const replaceMarkRe = getMark(replaceMark)
-			const data = `\\w+:(?!(${semicolonMarkRe}|${replaceMarkRe}|\\d|{|true|false)).+`
+			const data = `\\w+:(?!(${semicolonMarkRe}|${replaceMarkRe}|\\d|{|\\[|true|false)).+`
 			return new RegExp(data, 'g')
 		}
 
@@ -91,10 +100,14 @@ export default defineComponent({
 			replaceNumber++
 			return replaceMark + replaceNumber + replaceMark
 		}
-		function setReplaceData(data: string, re: any) {
+		function setReplaceData(data: string, re: any, setData?: (item: string) => string) {
 			return data.replace(re, function ($1) {
 				const data$1 = setReplaceMark()
-				replaceObject[data$1] = $1
+				if (setData) {
+					replaceObject[data$1] = setData($1)
+				} else {
+					replaceObject[data$1] = $1
+				}
 				return data$1
 			})
 		}
@@ -108,6 +121,56 @@ export default defineComponent({
 			errorNumber++
 			return errorMark + errorNumber + errorMark
 		}
+
+		// buildFunction标记 构建参数 ...xxx,xxx
+		const buildFunctionMark = 'buildFunction'
+		let buildFunctionNumber = 0
+		function setBuildFunctionNumberMark() {
+			buildFunctionNumber++
+			return buildFunctionMark + buildFunctionNumber + buildFunctionMark
+		}
+		function setBuildFunctionData(
+			data: string,
+			re: any,
+			setData: ($1: string, data$1: string) => { data: string; value: string }
+		) {
+			return data.replace(re, function ($1) {
+				const data$1 = setBuildFunctionNumberMark()
+				const item = setData($1, data$1)
+				buildFunctionObject[data$1] = item.data
+				return item.value
+			})
+		}
+		const buildFunctionObject: ObjectMap = {}
+
+		// buildFunction标记 构建参数 ...xxx,xxx
+		const fillingObjectMark = 'fillingObject'
+		const fillingArrayMark = 'fillingArray'
+		let fillingArrayNumber = 0
+		let fillingObjectNumber = 0
+		function setFillingArrayMarkNumberMark() {
+			fillingArrayNumber++
+			return fillingArrayMark + fillingArrayNumber + fillingArrayMark
+		}
+		function setFillingObjectMarkMark() {
+			fillingObjectNumber++
+			return `${fillingObjectMark}${fillingObjectNumber}:'${fillingObjectMark}${fillingObjectNumber}${fillingObjectMark}'`
+		}
+		function setFillingTypeData(
+			data: string,
+			re: any,
+			setType: ($1: string) => 'Array' | 'Object',
+			setData: ($1: string, data$1: string, type: 'Array' | 'Object') => { data: string; value: string }
+		) {
+			return data.replace(re, function ($1) {
+				const type = setType($1)
+				const data$1 = type === 'Array' ? setFillingArrayMarkNumberMark() : setFillingObjectMarkMark()
+				const item = setData($1, data$1, type)
+				fillingTypeData[data$1] = item.data
+				return item.value
+			})
+		}
+		const fillingTypeData: ObjectMap = {}
 
 		function textClick() {
 			const data = dataProcessing.value
@@ -158,17 +221,43 @@ export default defineComponent({
 			// 去reture replaceObject
 			replaceData = setReplaceData(replaceData, returnSpace)
 
-			// 去空格 replaceObject
-			replaceData = replaceData.replace(/ /g, '')
-
-			// 去() => replaceObject
+			// 去()=>{} 去括号函数  replaceObject
 			function delFunBrackets() {
-				if (replaceData.match(funBrackets)) {
-					replaceData = setReplaceData(replaceData, funBrackets)
+				const mark = '#Y4%'
+				const funBrackets1 = /\([^(]*\) *=> *{(.|\n)+/g // 括号函数
+				const funBrackets2 = /\([^(]*\) *=> *{(.|\n)+?(#Y4%)/g // 括号函数
+				const matchData = replaceData.match(funBrackets1)
+				if (matchData) {
+					let nub = 0
+					let isOk = false
+					replaceData = replaceData.replace(funBrackets1, ($1) => {
+						return $1.replace(/{|}/g, ($2) => {
+							if (isOk) {
+								return $2
+							}
+							if ($2 === '}') {
+								nub--
+							} else if ($2 === '{') {
+								nub++
+							}
+							if (!nub) {
+								isOk = true
+								return mark
+							}
+							return $2
+						})
+					})
+					replaceData = setReplaceData(replaceData, funBrackets2, (item) => {
+						item = item.replace(new RegExp(mark, 'g'), '}')
+						return item
+					})
 					delFunBrackets()
 				}
 			}
 			delFunBrackets()
+
+			// 去空格 replaceObject
+			replaceData = replaceData.replace(/ /g, '')
 
 			//去 xxx:xxx | xxx:()=>xxx errorObject
 			function decError() {
@@ -192,12 +281,7 @@ export default defineComponent({
 			}
 			decError()
 
-			// console.log('replace', replaceData)
-			// console.log(errorObject)
-			// console.log(replaceObject)
-			// console.log(semicolonObject)
-
-			// replaceData处理完后，开始解析replaceData转成JSON对象
+			// replaceData处理完后，开始解析replaceData初步转成JSON对象 xxx：‘xxxx’， 不过还有一些是 ,...xxx 和 ,xxx, 还有继续过滤
 			function setParsingReplaceData() {
 				return replaceData.replace(new RegExp(getAllMarkReg(), 'g'), ($1) => {
 					const data$1 = $1.match(new RegExp(getMark(semicolonMark), 'g'))
@@ -208,8 +292,78 @@ export default defineComponent({
 				})
 			}
 
-			const returnData = setParsingReplaceData()
+			let returnData = setParsingReplaceData()
+
+			// 去构建参数 ...xxx | ...[xxx] | ...{xxxx}
+			function decBuildFunction() {
+				returnData = setBuildFunctionData(returnData, buildFunction, ($1, data$1) => {
+					const matchData = $1.match(',')
+					const data = $1.replace(/,/g, '')
+					return { data: data, value: `${data$1}${matchData ? ',' : ''}` }
+				})
+			}
+
+			decBuildFunction()
+
+			// 填充错误信息 ,xxx, | ,xxx} | ,xxxx] 区分Object还是Array
+			function fillingErrorData() {
+				// {title:'操作',agag,shsdhs,shsh,dfjdjfd},'dataIndex':'operate',align:'center',}
+				// xxx, xxx,|}|]|
+				// const reg1 = /[a-zA-Z]\w+(?!(:))(,|}|\])(?!((\w+(,|}|\]))))(.*?(,|}|\]))?/g
+				// const reg2 = /[a-zA-Z]\w+(?!(:))/g //只能在reg1里面使用 检验 xxxxx
+				// 和reg1一样， 添加了\s空白符号判断
+				const pattern = /[a-zA-Z]\w+(?!(:))((,|}|\]))\s*(?!((\w+(,|}|\]))))((.|\s)*?({|}|\[|\]))?/g
+				if (returnData.match(pattern)) {
+					returnData = setFillingTypeData(
+						returnData,
+						pattern,
+						($1) => {
+							const $2 = $1.replace(/\s/g, '')
+							const matchData = $2.match(/{|}|\[|\]/)
+							if (!matchData) {
+								throw '构建函数错误1'
+							}
+							let type: 'Object' | 'Array' = 'Object'
+							switch (matchData[0]) {
+								case '}':
+									break
+								case ']':
+									type = 'Array'
+									break
+								default:
+									{
+										switch ($2.slice((matchData.index || 1) - 1, matchData.index)) {
+											case ':':
+												break
+											case ',':
+												type = 'Array'
+												break
+											default:
+												throw '构建函数错误2'
+										}
+									}
+									break
+							}
+							return type
+						},
+						($1, data$1, type) => {
+							let data = ''
+							let value = ''
+							value = $1.replace(/^\w+/, ($2) => {
+								data = $2
+								return type === 'Array' ? `'${data$1}'` : data$1
+							})
+							return { data: data, value: value }
+						}
+					)
+					fillingErrorData()
+				}
+			}
+			fillingErrorData()
+
+			console.log('returnData', returnData)
 			const evalData = eval('(' + returnData + ')')
+			console.log(evalData)
 
 			let testData = JSON.stringify(evalData)
 			testData = testData.replace(new RegExp(`"(${getAllMarkReg()})"`, 'g'), ($1) => {
