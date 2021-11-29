@@ -23,7 +23,7 @@ export default defineComponent({
 		const funBrackets = /\([^(]*\) *=> *{[^{]+?}/g // 括号函数
 		const brackets = /{[^{]*?}/g // 判断括号
 		const constantString = /true|false|null|undefined/g
-		const constantParam = /({|\[|,|:)\s?(true|false|null|undefined)\s?(]|}|,)/
+		const constantParam = /({|\[|,|:)\s*(true|false|null|undefined)\s*(]|}|,)/g
 		//处理特殊符号例如 （转\(
 		function setSpecialSymbolReg(value: string) {
 			return value.replace(/\(|\)/g, ($1) => {
@@ -174,7 +174,7 @@ export default defineComponent({
 		}
 		const fillingTypeData: ObjectMap = {}
 
-		const constantMark = '#@1'
+		const constantMark = 'Q#W'
 		let constantNumber = 0
 		function setConstantMark() {
 			constantNumber++
@@ -317,7 +317,7 @@ export default defineComponent({
 			let returnData = setParsingReplaceData()
 
 			// 去常量 true|false,xxx
-			setConstantData(returnData, constantParam, ($1, data$1) => {
+			returnData = setConstantData(returnData, constantParam, ($1, data$1) => {
 				let data = '',
 					value = $1
 				const matchData = $1.match(constantString)
@@ -327,7 +327,6 @@ export default defineComponent({
 						return `'${data$1}'`
 					})
 				}
-
 				return { data, value }
 			})
 
@@ -399,11 +398,10 @@ export default defineComponent({
 			fillingErrorData()
 
 			// 解析常量 true被转换后解析回来
-			returnData.replace(new RegExp(`${constantMark}\\d${constantMark}`, 'g'), ($1) => {
-				return constantObject[$1]
+			returnData = returnData.replace(new RegExp(`'${constantMark}\\d${constantMark}'`, 'g'), ($1) => {
+				return constantObject[$1.replace(/'/g, '')]
 			})
 
-			console.log('returnData', returnData)
 			const evalData = eval('(' + returnData + ')')
 			console.log(evalData)
 
