@@ -25,6 +25,11 @@ const routes: Array<RouteRecordRaw> = [
 		path: '/dataProcessing',
 		name: 'dataProcessing',
 		component: () => import('../views/dataProcessing/dataProcessing')
+	},
+	{
+		path: '/generateTemplate',
+		name: 'generateTemplate',
+		component: () => import('../views/generateTemplate/index')
 	}
 ]
 const router = createRouter({
