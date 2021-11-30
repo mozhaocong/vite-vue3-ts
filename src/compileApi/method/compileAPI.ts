@@ -1,9 +1,6 @@
 import { dataTypeList, regExp, responsesMapping } from '../util'
 import { errorMethod, setErrData } from './errorMethod'
 import { ApiName, testDefinitionsData } from '../index'
-type ObjectMap<Key extends string | number | symbol = any, Value = any> = {
-	[key in Key]: Value
-}
 
 // 编辑API
 export function compileAPI({ setPaths, setTagData }: ObjectMap) {

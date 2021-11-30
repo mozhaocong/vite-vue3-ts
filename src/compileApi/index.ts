@@ -8,6 +8,7 @@ import { compileAPI } from './method/compileAPI'
 import { compileDefs } from './method/compileDefs'
 import { setDefinitions } from './method/setDefinitions'
 import { setPathsTags } from './method/setPathsTags'
+import { setRequestDefinition } from '@/compileApi/method/setRequestDefinition'
 
 export let ApiName = 'stock' // def API
 let setPathsTagsData: ObjectMap
@@ -25,6 +26,8 @@ export function initApi({ url, apiName }: any) {
 				})
 			}
 			ApiName = apiName || 'stock'
+			//请求接口测试
+			setRequestDefinition(res.data.definitions)
 			setPathsTagsData = setPathsTags(res.data.paths, res.data.tags)
 			setDefinitionsData = setDefinitions(res.data.definitions)
 
@@ -42,7 +45,6 @@ export function initApi({ url, apiName }: any) {
 			for (const i in setDefinitionsData) {
 				deleteListData(setDefinitionsData[i])
 			}
-			console.log('setDefinitionsData', setDefinitionsData)
 			compileDefsData = compileDefs(setDefinitionsData)
 			compileAPIData = compileAPI(setPathsTagsData)
 			// console.log('setPathsTagsData', setPathsTagsData);
