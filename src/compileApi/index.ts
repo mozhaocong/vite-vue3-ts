@@ -42,6 +42,7 @@ export function initApi({ url, apiName }: any) {
 			for (const i in setDefinitionsData) {
 				deleteListData(setDefinitionsData[i])
 			}
+			console.log('setDefinitionsData', setDefinitionsData)
 			compileDefsData = compileDefs(setDefinitionsData)
 			compileAPIData = compileAPI(setPathsTagsData)
 			// console.log('setPathsTagsData', setPathsTagsData);

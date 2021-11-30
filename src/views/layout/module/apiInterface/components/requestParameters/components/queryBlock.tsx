@@ -2,7 +2,6 @@ import { defineComponent, PropType, ref, computed, watch, inject } from 'vue'
 import { ArrayKeyToObjet, clone, setObjetToObject } from '@/utils/data'
 import { apiInterfacePropsData, reqDataType } from '@/views/layout/tsType'
 import { compileApiModule } from '@/store/modules/compileApi'
-import DataProcessing from './dataProcessing'
 
 const propsData = {
 	reqData: {
@@ -188,7 +187,7 @@ export default defineComponent({
 		function paramsMappingBlock() {
 			return (
 				<>
-					<a-textarea v-model={[paramsMappingValue.value, 'value']} />
+					<a-textarea v-model={[paramsMappingValue.value, 'value']} autosize={{ minRows: 2, maxRows: 6 }} allowClear />
 					<a-button onClick={() => paramsMappingInitCLick('init')}>重新生成列表</a-button>
 					<a-button onClick={() => paramsMappingInitCLick('edit')}>修改列表列表</a-button>
 					<a-button onClick={initCompileApiMappingList}>数据恢复</a-button>
@@ -214,12 +213,11 @@ export default defineComponent({
 
 		return () => (
 			<>
-				<DataProcessing />
 				<a-space size={15}>
 					<div>参数名称： {props.reqData.value}</div>
 					<a-button onClick={() => (filterModal.value = true)}>过滤字段</a-button>
-					<a-button onClick={() => (isParamsMapping.value = true)}>参数映射</a-button>
 					<a-button onClick={() => (isParamsMapping.value = false)}>参数列表</a-button>
+					<a-button onClick={() => (isParamsMapping.value = true)}>参数映射</a-button>
 				</a-space>
 				<a-divider />
 				<a-modal v-model={[filterModal.value, 'visible']} title="过滤字段" width="70vw">

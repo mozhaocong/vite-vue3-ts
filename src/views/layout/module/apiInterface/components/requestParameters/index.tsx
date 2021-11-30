@@ -13,6 +13,7 @@ export default defineComponent({
 		})
 
 		function requestParameters(item: ObjectMap) {
+			console.log('item', item)
 			const requestParametersObject: ObjectMap = {}
 			for (const i in item.requestParameters) {
 				switch (i) {
@@ -33,7 +34,7 @@ export default defineComponent({
 									reqData={{
 										label: 'body',
 										value: item.requestParameters.body.type,
-										data: item.requestParameters.query
+										data: item
 									}}
 								/>
 							)

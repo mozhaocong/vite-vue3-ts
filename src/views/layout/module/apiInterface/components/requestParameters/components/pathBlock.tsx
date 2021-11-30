@@ -12,6 +12,7 @@ export default defineComponent({
 	name: 'apiInterface',
 	props: propsData,
 	setup(props) {
+		console.log('reqData', props.reqData)
 		return () => <div>{props.reqData.value}</div>
 	}
 })

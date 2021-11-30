@@ -33,20 +33,21 @@ export default defineComponent({
 			setTemplate(returnData)
 		}
 		function setTemplate(value: string[]) {
+			let nub = 0
 			function templateTableString(val: string) {
-				return `{ title: '${val}', key: 'null', dataIndex: 'null', align: 'center', width: 150 }`
+				return `{ title: '${val}', key: 'null${nub}', dataIndex: 'null${nub}', align: 'center', width: 150 }`
 			}
 			function setTableReturnData(data: string[]): string {
 				return 'export const columns: Rantion.TableColumns[] = [' + data.join(',') + ']'
 			}
 			function templateSearchString(val: string) {
-				return `{title: '${val}',key: 'null',component: 'a-input',props: {allowClear: true}}`
+				return `{title: '${val}',key: 'null${nub}',component: 'a-input',props: {allowClear: true}}`
 			}
 			function setSearchReturnData(data: string[]): string {
 				return 'export const row:rowArray[] = [' + data.join(',') + ']'
 			}
 			function templateFromString(val: string) {
-				return `{title: '${val}',key: 'null',props: {allowClear: true}}`
+				return `{title: '${val}',key: 'null${nub}',props: {allowClear: true}}`
 			}
 			function setFromReturnData(data: string[]): string {
 				return 'export const rowFrom:FromRow[] = [' + data.join(',') + ']'
@@ -63,6 +64,7 @@ export default defineComponent({
 			}
 
 			const data = value.map((item) => {
+				nub++
 				return setTemplateType({ item })?.template || ''
 			})
 

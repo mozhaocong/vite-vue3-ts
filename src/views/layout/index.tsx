@@ -17,7 +17,7 @@ export default defineComponent({
 			return data
 		})
 		// api接口处理
-		apiInit('/JSON/oms.json', apiName.value).then((item) => {
+		apiInit('/JSON/test.json', apiName.value).then((item) => {
 			subMenuList.value = item.arrayData
 			apiData.value = item.res
 		})

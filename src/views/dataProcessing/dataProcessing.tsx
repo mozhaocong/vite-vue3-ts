@@ -422,7 +422,6 @@ export default defineComponent({
 				}
 				return parseVariable($1.replace(/"/g, ''))
 			})
-			console.log(testData)
 			return
 		}
 		return () => (
