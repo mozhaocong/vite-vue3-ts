@@ -12,3 +12,7 @@ export function copyText(text: string) {
 	message.success('复制成功')
 	return res
 }
+
+export function isString(item: any): item is string {
+	return Object.prototype.toString.call(item) == '[object String]'
+}

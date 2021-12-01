@@ -39,5 +39,6 @@ export const responsesMapping: ObjectMap = {
 	string: 'string',
 	int: 'number',
 	any: 'any',
-	boolean: 'boolean'
+	boolean: 'boolean',
+	[replaceData.TOString]: replaceData.TOString
 }
