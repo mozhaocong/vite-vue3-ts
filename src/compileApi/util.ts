@@ -34,10 +34,12 @@ export const replaceMethod = {
 
 export const responsesMapping: ObjectMap = {
 	List: 'Array',
+	array: 'Array',
 	Map: 'ObjectMap',
 	object: 'ObjectMap',
 	string: 'string',
 	int: 'number',
+	integer: 'number',
 	any: 'any',
 	boolean: 'boolean',
 	[replaceData.TOString]: replaceData.TOString
