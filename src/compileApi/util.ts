@@ -39,6 +39,7 @@ export const responsesMapping: ObjectMap = {
 	object: 'ObjectMap',
 	string: 'string',
 	int: 'number',
+	number: 'number',
 	integer: 'number',
 	any: 'any',
 	boolean: 'boolean',

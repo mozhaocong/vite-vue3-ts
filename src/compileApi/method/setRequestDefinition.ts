@@ -66,8 +66,8 @@ export function setRequestDefinition(item: any) {
 					type: '',
 					originalRef: ''
 				}
+				setErrData({ data: data[dataKey], key: dataKey, type: 'setRequestDefinition' })
 				if (regData.length > 2) {
-					setErrData({ data: data[dataKey], key: dataKey, type: 'setRequestDefinition' })
 					errorMethod('setRequestDefinition regData有两个值以上')
 				}
 				regData.forEach((res) => {
@@ -81,18 +81,39 @@ export function setRequestDefinition(item: any) {
 				let isTypeOk = !datatype.type
 				for (const key in properties) {
 					const propertiesData = properties[key]
-					if (propertiesData.items) {
-						if (propertiesData.items.originalRef && propertiesData.items.originalRef === datatype.originalRef) {
+					if (datatype.originalRef) {
+						let nub = 0
+						if (propertiesData.originalRef && propertiesData.originalRef === datatype.originalRef) {
+							propertiesData.originalRef = replaceDataUtil.TOString
+							isOriginalRefOk = true
+							nub++
+						}
+						if (propertiesData.items?.originalRef && propertiesData.items.originalRef === datatype.originalRef) {
 							propertiesData.items.originalRef = replaceDataUtil.TOString
 							isOriginalRefOk = true
-							if (datatype.type) {
-								if (propertiesData.type.toUpperCase() === datatype.type.toUpperCase()) {
-									isTypeOk = true
-									delete propertiesData.type
-								} else {
-									errorMethod('setRequestDefinition datatype.type有值但匹配不上')
-								}
-							}
+							nub++
+						}
+						if (nub === 2) {
+							errorMethod('setRequestDefinition datatype.originalRef匹配两次', datatype.type, propertiesData.type)
+						}
+					}
+					if (datatype.type) {
+						let nub = 0
+						if (propertiesData.type.toUpperCase() === datatype.type.toUpperCase()) {
+							isTypeOk = true
+							delete propertiesData.type
+							nub++
+						}
+						if (propertiesData?.items?.type.toUpperCase() === datatype.type.toUpperCase()) {
+							isTypeOk = true
+							delete propertiesData.type
+							nub++
+						}
+						if (nub === 2) {
+							errorMethod('setRequestDefinition datatype.type匹配两次', datatype.type, propertiesData.type)
+						}
+						if (!isTypeOk) {
+							errorMethod('setRequestDefinition datatype.type有值但匹配不上', datatype.type, propertiesData.type)
 						}
 					}
 				}

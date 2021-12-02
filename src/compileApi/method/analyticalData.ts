@@ -1,6 +1,7 @@
 import { isString } from '@/utils/typeJudgment'
 import { deepClone } from '@/utils/data'
 import { responsesMapping } from '@/compileApi/util'
+import { errorMethod, setErrData } from '@/compileApi/method/errorMethod'
 function checkPropertiesType(item: any) {
 	const checkObject: ObjectMap = {}
 	for (const keyA in item) {
@@ -10,8 +11,8 @@ function checkPropertiesType(item: any) {
 				const propertiesKey = itemKey.properties[KeyB]
 				for (const keyB in propertiesKey) {
 					// if (['originalRef', 'enum'].includes(keyB)) {
-					if (['type'].includes(keyB)) {
-						// console.log('includes', propertiesKey)
+					if (['exclusiveMinimum'].includes(keyB)) {
+						console.log('includes', propertiesKey)
 					}
 					checkObject[keyB] = true
 				}
@@ -21,39 +22,31 @@ function checkPropertiesType(item: any) {
 	console.log('checkObject', checkObject)
 }
 
-// function objectForSetData(data: ObjectMap, ArrayList: Array<{ call?: (item: any) => void; key: string | boolean }>) {
-// 	const item = deepClone(ArrayList)
-// 	const itemData = item.shift()
-// 	if (!itemData) return
-// 	const key = itemData.key
-// 	for (const dataKey in data) {
-// 		if (isString(key)) {
-// 			if (data[dataKey][key]) {
-// 				if (itemData.call) {
-// 					itemData.call({ data: data[dataKey][key], parent: data[dataKey] })
-// 				}
-// 				objectForSetData(data[dataKey][key], item)
-// 			}
-// 		} else {
-// 			if (itemData.call) {
-// 				itemData.call({ data: data[dataKey], parent: data })
-// 				objectForSetData(data[dataKey], item)
-// 			}
-// 		}
-// 	}
-// }
-
-export function analyticalData(item: any) {
-	console.log(item)
-	// checkPropertiesType(item)
-
-	for (const keyA in item) {
-		const itemKey = item[keyA]
-		for (const keyB in itemKey.properties) {
-			const propertiesKey = itemKey.properties[keyB]
-			setPropertiesKeyData({ key: keyB, ...propertiesKey })
+function checkitemType(item: ObjectMap) {
+	const data: ObjectMap = {}
+	for (const itemKey in item) {
+		for (const itemKeyKey in item[itemKey]) {
+			data[itemKeyKey] = true
 		}
 	}
+	console.log(data)
+}
+
+export function analyticalData(item: any) {
+	// console.log(item)
+	// checkPropertiesType(item)
+	// checkitemType(item)
+	const dataList: ObjectMap<string, itemType> = {}
+	for (const keyA in item) {
+		const itemKey = item[keyA]
+		dataList[keyA] = { ...itemKey, properties: [] }
+		setErrData({ data: item[keyA], key: keyA, type: 'analyticalData' })
+		for (const keyB in itemKey.properties) {
+			const propertiesKey = itemKey.properties[keyB]
+			dataList[keyA].properties.push(setPropertiesKeyData({ key: keyB, ...propertiesKey }))
+		}
+	}
+	console.log('dataList', dataList)
 }
 
 type attributes = {
@@ -67,18 +60,31 @@ type attributes = {
 
 type propertiesType = {
 	type: true
-	format: true
-	items: true
 	description: true
+	format: true
+	minimum: true
+	exclusiveMinimum: true
+	items: true
 	$ref: true
 	originalRef: true
-	enum: true
+	uniqueItems: true
+	minLength: true
+	maxLength: true
+}
+type itemType = {
+	type: string
+	properties: any[]
+	title: string
+	description: string
+	required: any
 }
 
 function setProperType(item: undefined | string) {
 	if (!item) return ''
 	if (responsesMapping[item]) {
 		return responsesMapping[item]
+	} else {
+		errorMethod('analyticalData setProperType 找不到', item)
 	}
 	return ''
 }
@@ -101,5 +107,5 @@ function setPropertiesKeyData(item: ObjectMap) {
 	}
 	returnData.type = type
 	returnData.originalRef = originalRef
-	console.log(returnData)
+	return returnData
 }
