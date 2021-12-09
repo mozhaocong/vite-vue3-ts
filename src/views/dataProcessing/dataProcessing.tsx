@@ -1,4 +1,5 @@
 import { defineComponent, onMounted, PropType, ref, watch } from 'vue'
+import { copyText } from '@/utils'
 
 const propsData = {
 	sourceData: {
@@ -13,7 +14,7 @@ export default defineComponent({
 	name: 'dataProcessing',
 	props: propsData,
 	setup(props) {
-		const headConst = /^.*(const|let)(.|[^\n])*=/
+		const headConst = /^.*(const|let)(.|[^\n])*?=/
 		const semicolon = /('.*?')|(".*?")/g
 		const htmlDom = /<[^/](\w|-|_)+\s{0,1}\S+?>/g
 		const htmlDomHead = /<[^/](\w|-|_)+\s{0,1}/g
@@ -424,12 +425,15 @@ export default defineComponent({
 				return parseVariable($1.replace(/"/g, ''))
 			})
 			console.log('testData', testData)
+
+			const testDataData = dataHead.value + autoHeadData.value + testData
+			copyText(testDataData)
 			return
 		}
 
 		return () => (
 			<div style={{ width: '80%', margin: 'auto' }}>
-				<a-input v-model={dataHead.value} />
+				<a-input v-model={[dataHead.value, 'value']} />
 				<a-checkbox v-model={[autoHeadCheck.value, 'checked']} onChange={autoHeadChange}>
 					头部匹配const | let
 				</a-checkbox>
