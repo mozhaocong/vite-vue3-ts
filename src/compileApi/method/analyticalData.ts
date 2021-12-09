@@ -46,7 +46,8 @@ export function analyticalData(item: any) {
 			dataList[keyA].properties.push(setPropertiesKeyData({ key: keyB, ...propertiesKey }))
 		}
 	}
-	console.log('dataList', dataList)
+	// console.log('dataList', dataList)
+	return dataList
 }
 
 type attributes = {
@@ -102,8 +103,8 @@ function setPropertiesKeyData(item: ObjectMap) {
 	if (item.items) {
 		itemsType = setProperType(item.items.type)
 		itemsOriginalRef = setOriginalRef(item.items.originalRef)
-		type = type ? type + ',' : '' + itemsType
-		originalRef = originalRef ? originalRef + ',' : '' + itemsOriginalRef
+		type = type ? type + (itemsType ? ',' + itemsType : '') : itemsType
+		originalRef = originalRef ? (originalRef + itemsOriginalRef ? ',' + itemsOriginalRef : '') : itemsOriginalRef
 	}
 	returnData.type = type
 	returnData.originalRef = originalRef

@@ -136,5 +136,5 @@ export function setRequestDefinition(item: any) {
 	}
 
 	const returnSetData = setData(cloneData)
-	analyticalData(clone(returnSetData))
+	return analyticalData(clone(returnSetData))
 }

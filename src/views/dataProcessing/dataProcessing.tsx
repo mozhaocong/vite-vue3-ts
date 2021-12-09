@@ -301,6 +301,7 @@ export default defineComponent({
 					}
 				}
 			}
+
 			decError()
 
 			// replaceData处理完后，开始解析replaceData初步转成JSON对象 xxx：‘xxxx’， 不过还有一些是 ,...xxx 和 ,xxx, 还有继续过滤
@@ -422,8 +423,10 @@ export default defineComponent({
 				}
 				return parseVariable($1.replace(/"/g, ''))
 			})
+			console.log('testData', testData)
 			return
 		}
+
 		return () => (
 			<div style={{ width: '80%', margin: 'auto' }}>
 				<a-input v-model={dataHead.value} />

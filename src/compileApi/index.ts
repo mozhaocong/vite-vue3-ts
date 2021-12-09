@@ -13,6 +13,7 @@ import { setRequestDefinition } from '@/compileApi/method/setRequestDefinition'
 export let ApiName = 'stock' // def API
 let setPathsTagsData: ObjectMap
 let setDefinitionsData: ObjectMap
+let setRequestDefinitionData: ObjectMap
 export const testDefinitionsData: ObjectMap = {}
 let compileDefsData: ObjectMap = {}
 let compileAPIData: ObjectMap = {}
@@ -26,8 +27,7 @@ export function initApi({ url, apiName }: any) {
 				})
 			}
 			ApiName = apiName || 'stock'
-			//请求接口测试
-			setRequestDefinition(res.data.definitions)
+			setRequestDefinitionData = setRequestDefinition(res.data.definitions)
 			setPathsTagsData = setPathsTags(res.data.paths, res.data.tags)
 			setDefinitionsData = setDefinitions(res.data.definitions)
 
@@ -52,7 +52,12 @@ export function initApi({ url, apiName }: any) {
 			// console.log('compileDefsData', compileDefsData);
 			// console.log('compileAPIData', compileAPIData);
 
-			resolve({ compileAPIData: compileAPIData, compileDefsData, setTagData: setPathsTagsData.setTagData })
+			resolve({
+				compileAPIData: compileAPIData,
+				compileDefsData,
+				setTagData: setPathsTagsData.setTagData,
+				setRequestDefinitionData
+			})
 		})
 	})
 }

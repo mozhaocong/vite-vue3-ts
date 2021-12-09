@@ -1,4 +1,4 @@
-import { defineComponent, inject, PropType } from 'vue'
+import { defineComponent, inject, PropType, ref } from 'vue'
 import { apiInterfacePropsData, reqDataType } from '@/views/layout/tsType'
 import { clone } from 'ramda'
 
@@ -17,30 +17,65 @@ export default defineComponent({
 	setup(props) {
 		function setReqDataData() {
 			const getApiInterfacePropsData = inject('apiInterfacePropsData') as () => apiInterfacePropsData
-			const sourceData = getApiInterfacePropsData()
-			const targetTypeData = sourceData?.apiData?.compileDefsData?.targetTypeData
-			const apiName = sourceData.apiName
-			const value = props.reqData?.value?.replace(new RegExp(`def.${apiName}.`, 'g'), '')
-			console.log(targetTypeData[value], apiName, value)
-			const data = targetTypeData[value]
-			function forData(item: ObjectMap, MapData: ObjectMap, reg: any, regData: (res: string) => string) {
-				const returnData = clone(item)
-				for (const itemKey in returnData) {
-					if (item[itemKey].match(reg)) {
-						const getRegData = regData(item[itemKey])
-						console.log('getRegData', getRegData)
-						// returnData[itemKey] = forData(MapData[getRegData], MapData, reg, regData)
-					}
-				}
-				return returnData
-			}
-			forData(targetTypeData[value], targetTypeData, new RegExp(`def.${apiName}.`, 'g'), ($1) => {
-				// $1 = $1.replace()
-				return $1
-			})
-		}
-		setReqDataData()
 
-		return () => <div>{props.reqData.value}</div>
+			const sourceData = getApiInterfacePropsData()
+			// console.log('sourceData', sourceData)
+
+			const requestDefinitionData = sourceData?.apiData?.setRequestDefinitionData
+
+			const apiName = sourceData.apiName
+
+			const value = props.reqData?.value?.replace(new RegExp(`def.${apiName}.`, 'g'), '')
+
+			const processingData = requestDefinitionData[value]
+
+			// console.log('processingData', processingData)
+			function forData(item: any[]) {
+				return item.map((item: ObjectMap) => {
+					if (item.originalRef) {
+						const data = clone(requestDefinitionData[item.originalRef])
+						item.children = forData(data.properties)
+						delete data.properties
+						item.childrenParam = data
+					}
+					return item
+				})
+			}
+			processingData.properties = forData(processingData.properties)
+			console.log('processingData', processingData)
+			return processingData
+		}
+		const dataSource = ref()
+		dataSource.value = setReqDataData().properties
+
+		// return () => <div>{props.reqData.value}</div>
+		return () => (
+			<a-table
+				columns={[
+					{
+						title: '参数名称',
+						dataIndex: 'key',
+						key: 'key'
+					},
+					{
+						title: '参数说明',
+						dataIndex: 'description',
+						key: 'description'
+					},
+					{
+						title: '数据类型',
+						dataIndex: 'type',
+						key: 'type'
+					},
+					{
+						title: 'schema',
+						dataIndex: 'originalRef',
+						key: 'originalRef'
+					}
+				]}
+				data-source={dataSource.value}
+				pagination={false}
+			/>
+		)
 	}
 })
