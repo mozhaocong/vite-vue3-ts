@@ -67,7 +67,7 @@ export default defineComponent({
 		function setKeyReplaceMark() {
 			const semicolonMarkRe = getMark(semicolonMark)
 			const replaceMarkRe = getMark(replaceMark)
-			const data = `\\w+:(?!(${semicolonMarkRe}|${replaceMarkRe}|\\d|{|\\[|true|false)).+`
+			const data = `\\w+:(?!(${semicolonMarkRe}|${replaceMarkRe}|\\d|{|\\[|true|false)).+?(,|})`
 			return new RegExp(data, 'g')
 		}
 
