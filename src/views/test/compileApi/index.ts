@@ -1,4 +1,4 @@
-import Axios from '../../../api'
+import Axios from '@/api'
 type ObjectMap<Key extends string | number | symbol = any, Value = any> = {
 	[key in Key]: Value
 }
@@ -44,10 +44,6 @@ export function initApi({ url, apiName }: any) {
 			}
 			compileDefsData = compileDefs(setDefinitionsData)
 			compileAPIData = compileAPI(setPathsTagsData)
-			// console.log('setPathsTagsData', setPathsTagsData);
-			// console.log('setDefinitionsData', setDefinitionsData);
-			// console.log('compileDefsData', compileDefsData);
-			// console.log('compileAPIData', compileAPIData);
 
 			resolve({ compileAPIData: compileAPIData, compileDefsData, setTagData: setPathsTagsData.setTagData })
 		})

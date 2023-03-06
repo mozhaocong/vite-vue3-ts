@@ -3,7 +3,7 @@ import { defineComponent, ref } from 'vue'
 import Interface from './component/interface'
 import Content from './component/content'
 import { initApi } from './compileApi/index'
-import './index.scss'
+import './index.less'
 export default defineComponent({
 	name: 'TestMZC',
 	setup() {
@@ -13,30 +13,25 @@ export default defineComponent({
 		const InterfaceValue = ref<string>('')
 		const interfaceData = ref<ObjectMap>({})
 
-		initApi({ url: 'http://192.168.120.180:28090/serverApi/rantion-oms/v2/api-docs', apiName: 'oms' }).then(
-			(res: any) => {
-				// initApi({ url: 'http://192.168.120.177:18088/v2/api-docs' }).then((res: any) => {
-				// initApi({url: 'http://192.168.120.178:8068/v2/api-docs'}).then((res: any) => {
-				// initApi({url: 'http://192.168.120.177:9007/v2/api-docs'}).then((res: any) => {
-				console.log('res', res)
-				const arrayData: any[] = []
-				for (const i in res.compileAPIData) {
-					const dataA: any = { labelEn: res.setTagData[i], labelCn: i, children: [], value: res.setTagData[i] }
-					for (const j in res.compileAPIData[i]) {
-						const ijData = res.compileAPIData[i][j]
-						const dataB = {
-							labelEn: j,
-							labelCn: ijData.summary || j,
-							value: i + '-' + (ijData.summary || j),
-							...ijData
-						}
-						dataA.children.push(dataB)
+		initApi({ url: 'https://supply-gateway-test.htwig.com/scm/v3/api-docs', apiName: 'oms' }).then((res: any) => {
+			console.log('res', res)
+			const arrayData: any[] = []
+			for (const i in res.compileAPIData) {
+				const dataA: any = { labelEn: res.setTagData[i], labelCn: i, children: [], value: res.setTagData[i] }
+				for (const j in res.compileAPIData[i]) {
+					const ijData = res.compileAPIData[i][j]
+					const dataB = {
+						labelEn: j,
+						labelCn: ijData.summary || j,
+						value: i + '-' + (ijData.summary || j),
+						...ijData
 					}
-					arrayData.push(dataA)
+					dataA.children.push(dataB)
 				}
-				sourceData.value = arrayData
+				arrayData.push(dataA)
 			}
-		)
+			sourceData.value = arrayData
+		})
 
 		return () => (
 			<a-layout class="a-layout">
@@ -84,6 +79,7 @@ export default defineComponent({
 						</a-row>
 					</a-layout-header>
 					<a-layout-content>
+						{/*@ts-ignore*/}
 						<Content sourceData={interfaceData.value} />
 					</a-layout-content>
 					<a-layout-footer>Footer</a-layout-footer>

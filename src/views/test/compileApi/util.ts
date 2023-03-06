@@ -1,10 +1,13 @@
 export const dataTypeList = ['integer', 'string', 'number', 'boolean']
+
+const apiRequestMethod = /Using(POST|GET|PUT|get|post|get|post|get|post|get|post|get|post)\S*/g
+
 export const regExp = {
 	typeT0: /«\S*»/g,
 	replaceT0: /[«»]/g,
 	ListW: /«\w*»/g, // 处理T0  «List«StockSkuCo»» List格式的
 	sS: /\s\S/g,
-	Using: /Using(POST|GET|PUT)\S*/g,
+	Using: /Using(POST|GET|PUT|)\S*/g,
 	Controller: / Controller$/g,
 	removeTO: /<(\s|\S|\W\w)*>/g,
 	ChineseEnglish: /[\u4e00-\u9fa5_a-zA-Z0-9]*/g

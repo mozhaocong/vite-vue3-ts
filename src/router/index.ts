@@ -30,6 +30,11 @@ const routes: Array<RouteRecordRaw> = [
 		path: '/generateTemplate',
 		name: 'generateTemplate',
 		component: () => import('../views/generateTemplate/index')
+	},
+	{
+		path: '/knife4j',
+		name: 'knife4j',
+		component: () => import('../views/knife4j/index')
 	}
 ]
 const router = createRouter({

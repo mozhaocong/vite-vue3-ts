@@ -1,5 +1,5 @@
 import { defineComponent, PropType, renderSlot } from 'vue'
-import './index.scss'
+import './index.less'
 const propsData = {
 	sourceData: {
 		required: true,

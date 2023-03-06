@@ -114,12 +114,6 @@ export function setDefinitions(item: any) {
 		definitionsObj[name] = true
 		const properties = item[i].properties
 
-		// 调试节点
-		// if(i !== 'AsMaterialRejectBillRequestDto') {
-		//   continue
-		// }
-		// console.log(item[i]);
-
 		exportClassData[name] = {
 			properties: properties, //只用于参考数据，可以屏蔽
 			key: i, //只用于参考数据，可以屏蔽

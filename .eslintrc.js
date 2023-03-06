@@ -17,11 +17,11 @@ module.exports = {
 		'comma-dangle': [2, 'never'],
 		'@typescript-eslint/explicit-module-boundary-types': 'off',
 		'@typescript-eslint/no-explicit-any': 'off',
+		'@typescript-eslint/ban-ts-comment': 'off',
 		'prettier/prettier': [
 			'error',
 			{ endOfLine: 'auto' },
 			{
-				usePrettierrc: true,
 				printWidth: 150,
 				tabWidth: 2,
 				useTabs: true
