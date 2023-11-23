@@ -35,6 +35,11 @@ const routes: Array<RouteRecordRaw> = [
 		path: '/knife4j',
 		name: 'knife4j',
 		component: () => import('../views/knife4j/index')
+	},
+	{
+		path: '/vueCodeMirror',
+		name: 'vueCodeMirror',
+		component: () => import('../views/vueCodeMirror/index')
 	}
 ]
 const router = createRouter({
