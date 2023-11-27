@@ -15,5 +15,6 @@
     "lib": ["esnext", "dom", "dom.iterable", "scripthost", "ES2015"]
   },
   "exclude": ["node_modules"],
-  "include": ["src/**/*.ts", "src/**/*.tsx", "src/**/*.vue", "tests/**/*.ts", "tests/**/*.tsx", "types/*.ts"]
+//  "include": ["src/**/*.ts", "src/**/*.tsx", "src/**/*.vue", "tests/**/*.ts", "tests/**/*.tsx", "types/*.ts"],
+  "include": ["src/*", "src/**/*","build/*"]
 }

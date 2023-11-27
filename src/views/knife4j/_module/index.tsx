@@ -1,6 +1,7 @@
 // 处理knife4j文档返回的数据
 
-import { isTrue, deepClone, getArrayReduceObject } from 'html-mzc-tool'
+import { isTrue, deepClone, arrayGetDataList } from 'html-mzc-tool'
+import { requestBodyType, unifiedProcessing, responsesType, setErrData } from './toolMethod'
 
 function setDataObject(item: { list: string[]; setData: any; data: any }): void {
 	const { list, setData, data } = item
@@ -55,119 +56,40 @@ export function setKnife4jApiData(item: { data: any }) {
 // 获取目标数据
 export function getTargetApiData(item: { pathList: any[]; apiData: ObjectMap; targetItem: ObjectMap }) {
 	const { pathList, apiData, targetItem } = item
-	const { tag, path, methods } = targetItem
-	let findData = {}
+	const { tag, children: itemChildren } = targetItem
+	let listData = []
 	for (const forItem of pathList) {
 		const { tag: forTag, children } = forItem
-		if (forTag === tag) {
-			findData = children.find((findItem) => {
-				return path === findItem.path && methods === findItem.methods
-			})
-			break
-		}
+		// if (forTag === tag) {
+		// 	listData = arrayGetDataList(children, itemChildren)
+		// 	break
+		// }
+		listData = [...listData, ...children]
 	}
-	if (!isTrue(findData)) {
+
+	if (!isTrue(listData)) {
 		return {}
 	}
-	const targetData = deepClone(findData)
-	getRequestBodyData({ targetData, apiData })
-	// console.log('findData', targetData, apiData)
-}
 
-// requestBody 类型处理，可以识别出有没有漏掉要补的类型，有检查的作用
-const requestBodyType = {
-	'application/json': { route: ['schema', '$ref'], method: schemaRefMethod }
-}
-
-const apiTypeMap = {
-	integer: 'number',
-	array: 'array',
-	string: 'string'
-}
-
-function schemaRefMethod(item: { apiData: any; routeString: string }): ObjectMap {
-	const data = refMethod(item)
-	console.log('data', data)
-	const { properties, required = [] } = data
-	const listData = []
-	for (const property in properties) {
-		const sourceData = properties[property]
-		const { type, description } = sourceData
-
-		// 其他参数处理
-		const otherData: ObjectMap = {}
-		if (sourceData.enum) {
-			otherData.enum = sourceData.enum
-		}
-		if (required.includes(property)) {
-			otherData.required = true
-		}
-		listData.push({ ...otherData, key: property, description, type: apiTypeMap[type] })
-	}
-	console.log(listData)
-	return {}
-}
-
-function getPropertiesData(item: { apiData: any; routeString: string }) {
-	const data = refMethod(item)
-	const { properties, required = [] } = data
-	const listData = []
-	for (const property in properties) {
-		// 其他参数处理
-		const pushData: ObjectMap = getPropertiesKeyData(properties[property])
-		if (required.includes(property)) {
-			pushData.required = true
-		}
-		listData.push({ ...pushData, key: property })
-	}
-	console.log(listData)
-	return listData
-}
-
-function getPropertiesKeyData(sourceData) {
-	const { type, description } = sourceData
-
-	// 其他参数处理
-	const pushData: ObjectMap = {}
-	if (sourceData.enum) {
-		pushData.enum = sourceData.enum
-	}
-	if (description) {
-		pushData.description = description
-	}
-
-	return { ...pushData, type: apiTypeMap[type] }
-}
-
-function refMethod(item: { apiData: any; routeString: string }): ObjectMap {
-	const { apiData, routeString } = item
-	const dataA = routeString.split('#/')
-	const dataB = dataA?.[1]?.split('/')
-	const dataC = getArrayReduceObject(apiData, dataB || []) || {}
-	return dataC
-}
-
-function errLog(item) {
-	console.error(item)
+	const data = listData.map((mapItem) => {
+		setErrData(mapItem)
+		const { data } = mapItem
+		const targetData = deepClone(mapItem)
+		const responsesData = getResponsesData({ targetData, apiData })
+		const requestBodyData = getRequestBodyData({ targetData, apiData })
+		return { responsesData, requestBodyData, summary: data?.summary }
+	})
+	return data
 }
 
 function getRequestBodyData(item: { targetData: any; apiData: any }) {
 	const { targetData = {}, apiData } = item
 	const { requestBody } = targetData?.data || {}
-	// console.log('requestBody', requestBody, apiData)
-	const { content } = requestBody
-	let bodyTypeData = {}
-	for (const forItem in requestBodyType) {
-		const { route, method } = requestBodyType[forItem]
-		if (content[forItem]) {
-			const typeData = getArrayReduceObject(content[forItem], route)
-			if (!isTrue(typeData)) {
-				errLog('getRequestBodyData  requestBodyType，没有找到对应的参数')
-				return {}
-			}
-			bodyTypeData = method({ routeString: typeData, apiData })
-		}
-	}
+	return unifiedProcessing({ targetData: requestBody, apiData, typeObject: requestBodyType })
+}
 
-	console.log('bodyTypeData', bodyTypeData)
+function getResponsesData(item: { targetData: any; apiData: any }) {
+	const { targetData = {}, apiData } = item
+	const { responses } = targetData?.data || {}
+	return unifiedProcessing({ targetData: responses, apiData, typeObject: responsesType })
 }

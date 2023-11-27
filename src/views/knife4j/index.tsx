@@ -7,9 +7,11 @@ export default defineComponent({
 	setup() {
 		Axios.get('https://supply-gateway-test.htwig.com/scm/v3/api-docs').then((res: any) => {
 			const { data } = res
+			console.log('data', data)
 			const pathList = setKnife4jApiData({ data })
-			const testData = { tag: '扣款单', path: '/scm/scm/deductOrder/addDeductOrder', methods: 'post' }
-			getTargetApiData({ pathList: pathList, targetItem: testData, apiData: data })
+			const testData = { tag: '采购需求', children: [{ path: '/scm/scm/purchase/editPurchase' }] }
+			const result = getTargetApiData({ pathList: pathList, targetItem: testData, apiData: data })
+			console.log('Axios', result, pathList)
 		})
 		return () => <div>1</div>
 	}

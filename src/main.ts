@@ -11,8 +11,6 @@ import 'ant-design-vue/dist/antd.css'
 const app = createApp(App)
 app.use(Antd)
 app.use(store)
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-ignore
 app.use(JsonViewer)
 
 import axios, { AxiosInstance } from 'axios'
