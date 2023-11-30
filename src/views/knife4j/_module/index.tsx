@@ -60,24 +60,23 @@ export function getTargetApiData(item: { pathList: any[]; apiData: ObjectMap; ta
 	let listData = []
 	for (const forItem of pathList) {
 		const { tag: forTag, children } = forItem
-		// if (forTag === tag) {
-		// 	listData = arrayGetDataList(children, itemChildren)
-		// 	break
-		// }
-		listData = [...listData, ...children]
+		if (forTag === tag) {
+			listData = arrayGetDataList(children, itemChildren)
+			break
+		}
+		// listData = [...listData, ...children]
 	}
 
 	if (!isTrue(listData)) {
-		return {}
+		return []
 	}
 
 	const data = listData.map((mapItem) => {
 		setErrData(mapItem)
-		const { data } = mapItem
 		const targetData = deepClone(mapItem)
 		const responsesData = getResponsesData({ targetData, apiData })
 		const requestBodyData = getRequestBodyData({ targetData, apiData })
-		return { responsesData, requestBodyData, summary: data?.summary }
+		return { ...mapItem, responsesData, requestBodyData }
 	})
 	return data
 }
